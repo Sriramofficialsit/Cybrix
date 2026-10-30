@@ -1,0 +1,12 @@
+[build]
+  base = "frontend"
+  command = "npm run build"
+  publish = "out"
+
+# The frontend uses Next.js static export, so Netlify only needs to publish
+# the generated `frontend/out` directory. No server-side Next runtime is used.
+
+[[redirects]]
+  from = "/learn/modules/networking/1-1/story"
+  to = "/learn/modules/networking/1-1/story.html"
+  status = 200

@@ -1,0 +1,627 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+import Link from "next/link";
+import * as THREE from "three";
+
+const ADDR_MAP: Record<string, string> = { laptop: "192.168.1.10", tv: "192.168.1.12", printer: "192.168.1.20", phone: "192.168.1.11" };
+
+type Device = {
+  group: THREE.Group;
+  key: string;
+  label: string;
+  required: boolean;
+  connected: boolean;
+  addressed: boolean;
+  labelSprite: THREE.Sprite;
+  hitRadius: number;
+  hitRadiusOverride?: number;
+  userData: { screen?: THREE.Mesh; led?: THREE.Mesh };
+};
+
+type Request = { label: string; addr: string; legit: boolean };
+
+const REQUESTS: Request[] = [
+  { label: "Laptop", addr: "192.168.1.10", legit: true },
+  { label: "Unknown-Device-7F3A", addr: "192.168.1.66", legit: false },
+  { label: "Smart TV", addr: "192.168.1.12", legit: true },
+  { label: "Guest-Phone-B2", addr: "192.168.1.90", legit: false },
+  { label: "Printer", addr: "192.168.1.20", legit: true },
+];
+
+export default function GameScreen() {
+  const hostRef = useRef<HTMLDivElement>(null);
+  const hudRef = useRef<HTMLDivElement>(null);
+  const objectiveRef = useRef<HTMLDivElement>(null);
+  const counterRef = useRef<HTMLDivElement>(null);
+  const toastRef = useRef<HTMLDivElement>(null);
+  const promptRef = useRef<HTMLDivElement>(null);
+  const promptTextRef = useRef<HTMLSpanElement>(null);
+  const startOverlayRef = useRef<HTMLDivElement>(null);
+  const pausedOverlayRef = useRef<HTMLDivElement>(null);
+  const successOverlayRef = useRef<HTMLDivElement>(null);
+  const finalListRef = useRef<HTMLDivElement>(null);
+  const enterBtnRef = useRef<HTMLButtonElement>(null);
+  const resumeBtnRef = useRef<HTMLButtonElement>(null);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const host = hostRef.current!;
+    let stopped = false;
+
+    /* ---------- scene setup ---------- */
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xeef2fd);
+    scene.fog = new THREE.Fog(0xeef2fd, 9, 28);
+
+    const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(0, 1.6, 3.4);
+    camera.rotation.order = "YXZ";
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    host.appendChild(renderer.domElement);
+
+    function onResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+    window.addEventListener("resize", onResize);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.95));
+    const ceilLight1 = new THREE.PointLight(0xfff6e6, 0.7, 14); ceilLight1.position.set(-3, 3.6, -2); scene.add(ceilLight1);
+    const ceilLight2 = new THREE.PointLight(0xfff6e6, 0.7, 14); ceilLight2.position.set(3, 3.6, 2); scene.add(ceilLight2);
+    const signalGlow = new THREE.PointLight(0x1d4ed8, 1.1, 8); signalGlow.position.set(0, 1.2, 0); scene.add(signalGlow);
+
+    function makeCanvasTexture(draw: (ctx: CanvasRenderingContext2D, s: number) => void, size = 256) {
+      const c = document.createElement("canvas"); c.width = c.height = size;
+      const ctx = c.getContext("2d")!; draw(ctx, size);
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+      return tex;
+    }
+    const floorTex = makeCanvasTexture((ctx, s) => {
+      ctx.fillStyle = "#eef1f8"; ctx.fillRect(0, 0, s, s);
+      ctx.strokeStyle = "rgba(29,78,216,0.1)"; ctx.lineWidth = 2;
+      for (let i = 0; i <= s; i += 32) {
+        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, s); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(s, i); ctx.stroke();
+      }
+    });
+    floorTex.repeat.set(6, 6);
+
+    const ROOM_W = 12, ROOM_D = 10, ROOM_H = 4;
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(ROOM_W, ROOM_D), new THREE.MeshStandardMaterial({ map: floorTex, roughness: 0.9 }));
+    floor.rotation.x = -Math.PI / 2;
+    scene.add(floor);
+
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0xf2f0fa, roughness: 0.95, side: THREE.DoubleSide });
+    const ceilMat = new THREE.MeshStandardMaterial({ color: 0xfbfaff, roughness: 1, side: THREE.DoubleSide });
+    function wall(w: number, h: number, x: number, y: number, z: number, ry: number) {
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), wallMat);
+      m.position.set(x, y, z); m.rotation.y = ry;
+      scene.add(m);
+    }
+    wall(ROOM_W, ROOM_H, 0, ROOM_H / 2, -ROOM_D / 2, 0);
+    wall(ROOM_W, ROOM_H, 0, ROOM_H / 2, ROOM_D / 2, Math.PI);
+    wall(ROOM_D, ROOM_H, -ROOM_W / 2, ROOM_H / 2, 0, Math.PI / 2);
+    wall(ROOM_D, ROOM_H, ROOM_W / 2, ROOM_H / 2, 0, -Math.PI / 2);
+    const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(ROOM_W, ROOM_D), ceilMat);
+    ceiling.position.set(0, ROOM_H, 0); ceiling.rotation.x = Math.PI / 2;
+    scene.add(ceiling);
+
+    const winMat = new THREE.MeshBasicMaterial({ color: 0xbcd9f8 });
+    const win1 = new THREE.Mesh(new THREE.PlaneGeometry(4, 1.6), winMat);
+    win1.position.set(-2.5, 2.2, -ROOM_D / 2 + 0.02);
+    scene.add(win1);
+
+    /* ---------- devices ---------- */
+    const interactive: Device[] = [];
+    function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+      ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+    }
+    function labelSprite(text: string, color?: string) {
+      const c = document.createElement("canvas"); c.width = 256; c.height = 64;
+      const ctx = c.getContext("2d")!;
+      ctx.font = "600 28px -apple-system, sans-serif";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillStyle = "rgba(7,11,20,0.75)"; roundRect(ctx, 4, 10, 248, 44, 10); ctx.fill();
+      ctx.fillStyle = color || "#eef3fb";
+      ctx.fillText(text, 128, 33);
+      const tex = new THREE.CanvasTexture(c);
+      const mat = new THREE.SpriteMaterial({ map: tex, depthTest: false });
+      const spr = new THREE.Sprite(mat);
+      spr.scale.set(1.6, 0.4, 1);
+      spr.renderOrder = 999;
+      return spr;
+    }
+    function setLabelText(spr: THREE.Sprite, text: string, color: string) {
+      const c = document.createElement("canvas"); c.width = 256; c.height = 64; const ctx = c.getContext("2d")!;
+      ctx.font = "600 28px -apple-system, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillStyle = "rgba(7,11,20,0.75)"; roundRect(ctx, 4, 10, 248, 44, 10); ctx.fill();
+      ctx.fillStyle = color; ctx.fillText(text, 128, 33);
+      (spr.material as THREE.SpriteMaterial).map = new THREE.CanvasTexture(c);
+      spr.material.needsUpdate = true;
+    }
+
+    function addDevice(key: string, label: string, x: number, z: number, required: boolean, build: (g: THREE.Group & { hitRadiusOverride?: number; userData: any }) => void) {
+      const group = new THREE.Group() as THREE.Group & { hitRadiusOverride?: number };
+      group.position.set(x, 0, z);
+      build(group);
+      const lbl = labelSprite(label);
+      lbl.position.set(0, 1.55, 0);
+      group.add(lbl);
+      scene.add(group);
+      interactive.push({ group, key, label, required, connected: false, addressed: false, labelSprite: lbl, hitRadius: 1.1, hitRadiusOverride: group.hitRadiusOverride, userData: group.userData });
+    }
+
+    const router = new THREE.Group();
+    router.position.set(0, 0, 0);
+    const routerBase = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.36, 0.14, 24), new THREE.MeshStandardMaterial({ color: 0xe7ecfb, metalness: 0.2, roughness: 0.5 }));
+    routerBase.position.y = 0.72; router.add(routerBase);
+    const routerBody = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.12, 0.5), new THREE.MeshStandardMaterial({ color: 0x1d4ed8, metalness: 0.35, roughness: 0.35 }));
+    routerBody.position.y = 0.85; router.add(routerBody);
+    const pedestal = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 0.72, 12), new THREE.MeshStandardMaterial({ color: 0xd7dced }));
+    pedestal.position.y = 0.36; router.add(pedestal);
+    const ledColors = [0x38bdf8, 0xf2b84b, 0xea6a95];
+    const routerLeds: THREE.Mesh[] = [];
+    ledColors.forEach((c, i) => {
+      const led = new THREE.Mesh(new THREE.SphereGeometry(0.03, 10, 10), new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: 1.6 }));
+      led.position.set(-0.15 + i * 0.15, 0.92, 0.2);
+      router.add(led); routerLeds.push(led);
+    });
+    const routerLabel = labelSprite("Router", "#1d4ed8");
+    routerLabel.position.set(0, 1.55, 0);
+    router.add(routerLabel);
+    scene.add(router);
+    const ROUTER_POS = new THREE.Vector3(0, 0.9, 0);
+
+    addDevice("laptop", "Laptop", -4, -2.6, true, (g) => {
+      const desk = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.06, 0.7), new THREE.MeshStandardMaterial({ color: 0xceb99e, roughness: 0.8 }));
+      desk.position.y = 0.75; g.add(desk);
+      const legMat = new THREE.MeshStandardMaterial({ color: 0xb7bdd0 });
+      ([[-0.55, -0.28], [0.55, -0.28], [-0.55, 0.28], [0.55, 0.28]] as [number, number][]).forEach(([x, z]) => {
+        const leg = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.75, 0.06), legMat);
+        leg.position.set(x, 0.375, z); g.add(leg);
+      });
+      const base = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.03, 0.36), new THREE.MeshStandardMaterial({ color: 0xcfd6e3 }));
+      base.position.set(0, 0.79, 0.05); g.add(base);
+      const screen = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.34, 0.02), new THREE.MeshStandardMaterial({ color: 0x141c30, emissive: 0x123a6c, emissiveIntensity: 0.6 }));
+      screen.position.set(0, 0.97, -0.13); screen.rotation.x = -0.25;
+      g.add(screen);
+      g.userData.screen = screen;
+    });
+
+    addDevice("printer", "Printer", 4, -2.6, true, (g) => {
+      const body = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.5, 0.6), new THREE.MeshStandardMaterial({ color: 0xe7e9ee, roughness: 0.6 }));
+      body.position.y = 0.55; g.add(body);
+      const slot = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.04, 0.1), new THREE.MeshStandardMaterial({ color: 0x22293a }));
+      slot.position.set(0, 0.82, 0.2); g.add(slot);
+      const led = new THREE.Mesh(new THREE.SphereGeometry(0.025, 8, 8), new THREE.MeshStandardMaterial({ color: 0x555555, emissive: 0x000000 }));
+      led.position.set(0.35, 0.62, 0.31); g.add(led);
+      g.userData.led = led;
+    });
+
+    addDevice("tv", "Smart TV", 0, -ROOM_D / 2 + 0.15, true, (g) => {
+      const panel = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.9, 0.06), new THREE.MeshStandardMaterial({ color: 0x05070c, emissive: 0x081018, emissiveIntensity: 0.4 }));
+      panel.position.y = 1.9; g.add(panel);
+      const mount = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.15), new THREE.MeshStandardMaterial({ color: 0x222222 }));
+      mount.position.set(0, 1.9, 0.05); g.add(mount);
+      g.userData.screen = panel;
+      g.hitRadiusOverride = 2.2;
+    });
+
+    addDevice("phone", "Phone", -4, 2.6, false, (g) => {
+      const table = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.7, 16), new THREE.MeshStandardMaterial({ color: 0xd7dced }));
+      table.position.y = 0.35; g.add(table);
+      const phone = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.02, 0.28), new THREE.MeshStandardMaterial({ color: 0x111827, emissive: 0x152036, emissiveIntensity: 0.5 }));
+      phone.position.y = 0.71; g.add(phone);
+    });
+
+    function chair(x: number, z: number, rot: number) {
+      const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = rot;
+      const seat = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.06, 0.45), new THREE.MeshStandardMaterial({ color: 0x8a2e3f }));
+      seat.position.y = 0.45; g.add(seat);
+      const back = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.5, 0.06), new THREE.MeshStandardMaterial({ color: 0x8a2e3f }));
+      back.position.set(0, 0.7, -0.2); g.add(back);
+      const legMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
+      ([[-0.18, -0.18], [0.18, -0.18], [-0.18, 0.18], [0.18, 0.18]] as [number, number][]).forEach(([lx, lz]) => {
+        const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.45, 6), legMat);
+        leg.position.set(lx, 0.225, lz); g.add(leg);
+      });
+      scene.add(g);
+    }
+    chair(-4, -1.9, Math.PI);
+    chair(4, -1.9, Math.PI);
+
+    const KIOSK_POS = new THREE.Vector3(0, 1.5, 3.6);
+    function buildKiosk() {
+      const g = new THREE.Group(); g.position.set(0, 0, 3.6);
+      const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.1, 1.3, 12), new THREE.MeshStandardMaterial({ color: 0xd7dced }));
+      pillar.position.y = 0.65; g.add(pillar);
+      const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.05, 16), new THREE.MeshStandardMaterial({ color: 0x1d4ed8, metalness: 0.3, roughness: 0.4 }));
+      cap.position.y = 1.32; g.add(cap);
+      scene.add(g);
+      const kioskLabel = labelSprite("Reception", "#1d4ed8");
+      kioskLabel.position.set(0, 1.9, 3.6);
+      scene.add(kioskLabel);
+    }
+
+    const cableGroup = new THREE.Group();
+    scene.add(cableGroup);
+    function buildCable(fromPos: THREE.Vector3, color: number) {
+      const points: THREE.Vector3[] = [];
+      for (let i = 0; i <= 20; i++) {
+        const t = i / 20;
+        const p = new THREE.Vector3().lerpVectors(fromPos, ROUTER_POS, t);
+        p.y += Math.sin(t * Math.PI) * 0.15;
+        points.push(p);
+      }
+      const curve = new THREE.CatmullRomCurve3(points);
+      const geo = new THREE.TubeGeometry(curve, 24, 0.015, 6, false);
+      const mat = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.8 });
+      cableGroup.add(new THREE.Mesh(geo, mat));
+      const pulse = new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 10), new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: color, emissiveIntensity: 2 }));
+      cableGroup.add(pulse);
+      let t0: number | null = null;
+      function anim(ts: number) {
+        if (stopped) return;
+        if (t0 === null) t0 = ts;
+        const t = ((ts - t0) / 1400) % 1;
+        pulse.position.copy(curve.getPointAt(t));
+        requestAnimationFrame(anim);
+      }
+      requestAnimationFrame(anim);
+    }
+
+    /* ---------- game phases ---------- */
+    type Phase = "connect" | "address" | "verify";
+    let phase: Phase = "connect";
+    let requestIndex = 0, requestResolved = false, verifyCorrect = 0;
+    let requestOrb: THREE.Mesh | null = null, requestLabel: THREE.Sprite | null = null;
+    let gameStarted = false, gameWon = false;
+
+    function showToast(text: string) {
+      const t = toastRef.current; if (!t) return;
+      t.textContent = text;
+      t.classList.add("show");
+      setTimeout(() => t.classList.remove("show"), 2200);
+    }
+
+    function setPhase(p: Phase) {
+      phase = p;
+      const obj = objectiveRef.current; if (!obj) return;
+      if (p === "connect") {
+        obj.innerHTML = "Walk up to the <b>Laptop</b>, <b>Printer</b> and <b>Smart TV</b> and press <b>E</b> to connect each to the <b>Router</b>.";
+      } else if (p === "address") {
+        obj.innerHTML = "Now walk back to each connected device and press <b>E</b> to confirm its network <b>address</b>.";
+        showToast("ROUND 2 · ADDRESS IT");
+      } else if (p === "verify") {
+        obj.innerHTML = "New devices are requesting to join at the <b>Reception</b> kiosk. Press <b>E</b> to Allow known devices, <b>Q</b> to Block anything you don’t recognize.";
+        showToast("ROUND 3 · VERIFY");
+      }
+      updateCounter();
+    }
+
+    function eligibleForLook(d: Device) {
+      if (phase === "connect") return !d.connected;
+      if (phase === "address") return d.required && d.connected && !d.addressed;
+      return false;
+    }
+
+    function connectDevice(d: Device) {
+      if (d.connected) return;
+      d.connected = true;
+      const color = d.key === "laptop" ? 0x1d4ed8 : d.key === "tv" ? 0x5b9df2 : d.key === "printer" ? 0x0d9488 : 0xea6a95;
+      buildCable(new THREE.Vector3(d.group.position.x, 0.9, d.group.position.z), color);
+      setLabelText(d.labelSprite, d.label + " ✓", "#2dd4a7");
+      if (d.userData.screen) (d.userData.screen.material as THREE.MeshStandardMaterial).emissiveIntensity = 1.4;
+      if (d.userData.led) (d.userData.led.material as THREE.MeshStandardMaterial).emissive.setHex(0x2dd4a7);
+      updateCounter();
+      const required = interactive.filter((x) => x.required);
+      if (required.every((x) => x.connected)) setTimeout(() => setPhase("address"), 700);
+    }
+
+    function addressDevice(d: Device) {
+      if (d.addressed) return;
+      d.addressed = true;
+      setLabelText(d.labelSprite, d.label + " · " + ADDR_MAP[d.key], "#b8860a");
+      updateCounter();
+      const required = interactive.filter((x) => x.required);
+      if (required.every((x) => x.addressed)) {
+        setTimeout(() => { buildKiosk(); setPhase("verify"); spawnRequest(); }, 700);
+      }
+    }
+
+    function spawnRequest() {
+      const req = REQUESTS[requestIndex];
+      const orb = new THREE.Mesh(new THREE.SphereGeometry(0.16, 16, 16), new THREE.MeshStandardMaterial({ color: 0x1d4ed8, emissive: 0x1d4ed8, emissiveIntensity: 0.7 }));
+      orb.position.copy(KIOSK_POS).setY(1.55);
+      scene.add(orb);
+      const lbl = labelSprite(req.label + " · " + req.addr, "#12224f");
+      lbl.position.copy(KIOSK_POS).setY(1.95);
+      scene.add(lbl);
+      requestOrb = orb; requestLabel = lbl; requestResolved = false;
+      updateCounter();
+    }
+    function clearRequest() {
+      if (requestOrb) { scene.remove(requestOrb); requestOrb = null; }
+      if (requestLabel) { scene.remove(requestLabel); requestLabel = null; }
+    }
+    function resolveRequest(allow: boolean) {
+      if (phase !== "verify" || requestResolved || !requestOrb) return;
+      const req = REQUESTS[requestIndex];
+      const correct = allow === req.legit;
+      if (correct) verifyCorrect++;
+      requestResolved = true;
+      const flashColor = correct ? 0x2dd4a7 : 0xc94868;
+      (requestOrb.material as THREE.MeshStandardMaterial).color.setHex(flashColor);
+      (requestOrb.material as THREE.MeshStandardMaterial).emissive.setHex(flashColor);
+      updateCounter();
+      setTimeout(() => {
+        clearRequest();
+        requestIndex++;
+        if (requestIndex >= REQUESTS.length) finishGame();
+        else spawnRequest();
+      }, 650);
+    }
+
+    function updateCounter() {
+      const el = counterRef.current; if (!el) return;
+      if (phase === "connect") {
+        const required = interactive.filter((d) => d.required);
+        el.textContent = `${required.filter((d) => d.connected).length} / ${required.length} connected`;
+      } else if (phase === "address") {
+        const required = interactive.filter((d) => d.required);
+        el.textContent = `${required.filter((d) => d.addressed).length} / ${required.length} addressed`;
+      } else if (phase === "verify") {
+        el.textContent = `${Math.min(requestIndex, REQUESTS.length)} / ${REQUESTS.length} verified · ${verifyCorrect} correct`;
+      }
+    }
+
+    function finishGame() {
+      if (gameWon) return;
+      gameWon = true;
+      setTimeout(() => {
+        document.exitPointerLock();
+        const list = finalListRef.current;
+        if (list) {
+          const verifyOk = verifyCorrect === REQUESTS.length;
+          list.innerHTML =
+            `<span class="device-chip on"><span class="led"></span>Round 1 · Connect 3/3</span>` +
+            `<span class="device-chip on"><span class="led"></span>Round 2 · Address 3/3</span>` +
+            `<span class="device-chip ${verifyOk ? "on" : ""}"><span class="led"></span>Round 3 · Verify ${verifyCorrect}/${REQUESTS.length}</span>`;
+        }
+        if (successOverlayRef.current) successOverlayRef.current.style.display = "flex";
+      }, 500);
+    }
+
+    /* ---------- controls ---------- */
+    let yaw = 0, pitch = 0;
+    const keys: Record<string, boolean> = {};
+    let locked = false;
+    const MOVE_SPEED = 3.4;
+    const BOUND_X = ROOM_W / 2 - 0.6, BOUND_Z = ROOM_D / 2 - 0.6;
+
+    let currentTarget: Device | null = null;
+    function updateLookTarget() {
+      let closest: Device | null = null, closestDist = Infinity;
+      const camPos = camera.position;
+      const camDir = new THREE.Vector3(); camera.getWorldDirection(camDir);
+      interactive.forEach((d) => {
+        if (!eligibleForLook(d)) return;
+        const dPos = new THREE.Vector3(d.group.position.x, 1.2, d.group.position.z);
+        const toDev = dPos.clone().sub(camPos);
+        const dist = toDev.length();
+        const radius = d.hitRadiusOverride || d.hitRadius;
+        if (dist < 3.4 + radius) {
+          const angle = camDir.angleTo(toDev.normalize());
+          if (angle < 0.5 && dist < closestDist) { closest = d; closestDist = dist; }
+        }
+      });
+      currentTarget = closest;
+      const prompt = promptRef.current, promptText = promptTextRef.current;
+      if (!prompt || !promptText) return;
+      if (currentTarget) {
+        prompt.classList.add("show");
+        promptText.innerHTML = phase === "connect" ? `<kbd>E</kbd> Connect ${(currentTarget as Device).label} to the Router` : `<kbd>E</kbd> Confirm address for ${(currentTarget as Device).label}`;
+      } else if (phase !== "verify") {
+        prompt.classList.remove("show");
+      }
+    }
+    function nearKiosk() {
+      if (phase !== "verify" || !requestOrb) return false;
+      return camera.position.distanceTo(KIOSK_POS) < 2.6;
+    }
+    function updateKioskPrompt() {
+      const prompt = promptRef.current, promptText = promptTextRef.current;
+      if (!prompt || !promptText) return;
+      if (nearKiosk()) {
+        prompt.classList.add("show");
+        promptText.innerHTML = `<kbd>E</kbd> Allow <kbd class="block">Q</kbd> Block — ${REQUESTS[requestIndex].label}`;
+      } else {
+        prompt.classList.remove("show");
+      }
+    }
+    function tryInteract() {
+      if (phase === "connect") { if (currentTarget) connectDevice(currentTarget); }
+      else if (phase === "address") { if (currentTarget) addressDevice(currentTarget); }
+      else if (phase === "verify") { if (nearKiosk()) resolveRequest(true); }
+    }
+    function tryBlock() {
+      if (phase === "verify" && nearKiosk()) resolveRequest(false);
+    }
+
+    function onKeyDown(e: KeyboardEvent) {
+      keys[e.code] = true;
+      if (e.code === "KeyE") tryInteract();
+      if (e.code === "KeyQ") tryBlock();
+    }
+    function onKeyUp(e: KeyboardEvent) { keys[e.code] = false; }
+    function onMouseMove(e: MouseEvent) {
+      if (!locked) return;
+      yaw -= e.movementX * 0.0022;
+      pitch -= e.movementY * 0.0022;
+      pitch = Math.max(-1.2, Math.min(1.2, pitch));
+    }
+    document.addEventListener("keydown", onKeyDown);
+    document.addEventListener("keyup", onKeyUp);
+    document.addEventListener("mousemove", onMouseMove);
+
+    function setLocked(v: boolean) {
+      locked = v;
+      if (hudRef.current) hudRef.current.style.display = v ? "block" : "none";
+      if (pausedOverlayRef.current) pausedOverlayRef.current.style.display = !v && gameStarted && !gameWon ? "flex" : "none";
+    }
+    function onPointerLockChange() { setLocked(document.pointerLockElement === renderer.domElement); }
+    document.addEventListener("pointerlockchange", onPointerLockChange);
+
+    const onEnter = () => {
+      if (startOverlayRef.current) startOverlayRef.current.style.display = "none";
+      gameStarted = true;
+      renderer.domElement.requestPointerLock();
+    };
+    const onResume = () => renderer.domElement.requestPointerLock();
+    const onClose = () => { if (successOverlayRef.current) successOverlayRef.current.style.display = "none"; };
+    enterBtnRef.current?.addEventListener("click", onEnter);
+    resumeBtnRef.current?.addEventListener("click", onResume);
+    closeBtnRef.current?.addEventListener("click", onClose);
+
+    /* ---------- animation loop ---------- */
+    const clock = new THREE.Clock();
+    let rafId = 0;
+    function animate() {
+      if (stopped) return;
+      rafId = requestAnimationFrame(animate);
+      const dt = Math.min(clock.getDelta(), 0.05);
+      camera.rotation.set(pitch, yaw, 0, "YXZ");
+
+      if (locked) {
+        const forward = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw));
+        const right = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
+        const move = new THREE.Vector3();
+        if (keys["KeyW"] || keys["ArrowUp"]) move.add(forward);
+        if (keys["KeyS"] || keys["ArrowDown"]) move.sub(forward);
+        if (keys["KeyD"] || keys["ArrowRight"]) move.add(right);
+        if (keys["KeyA"] || keys["ArrowLeft"]) move.sub(right);
+        if (move.lengthSq() > 0) {
+          move.normalize().multiplyScalar(MOVE_SPEED * dt);
+          camera.position.add(move);
+          camera.position.x = Math.max(-BOUND_X, Math.min(BOUND_X, camera.position.x));
+          camera.position.z = Math.max(-BOUND_Z, Math.min(BOUND_Z, camera.position.z));
+        }
+        if (phase === "connect" || phase === "address") updateLookTarget();
+        else if (phase === "verify") updateKioskPrompt();
+      }
+
+      routerLeds.forEach((led, i) => { (led.material as THREE.MeshStandardMaterial).emissiveIntensity = 1.2 + Math.sin(performance.now() / 400 + i) * 0.5; });
+      signalGlow.intensity = 1.0 + Math.sin(performance.now() / 500) * 0.3;
+      if (requestOrb) requestOrb.position.y = 1.55 + Math.sin(performance.now() / 450) * 0.05;
+
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    setPhase("connect");
+
+    return () => {
+      stopped = true;
+      cancelAnimationFrame(rafId);
+      window.removeEventListener("resize", onResize);
+      document.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("keyup", onKeyUp);
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("pointerlockchange", onPointerLockChange);
+      enterBtnRef.current?.removeEventListener("click", onEnter);
+      resumeBtnRef.current?.removeEventListener("click", onResume);
+      closeBtnRef.current?.removeEventListener("click", onClose);
+      if (document.pointerLockElement === renderer.domElement) document.exitPointerLock();
+      renderer.dispose();
+      if (renderer.domElement.parentNode === host) host.removeChild(renderer.domElement);
+    };
+  }, []);
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "#f4f2f9", fontFamily: "var(--font-rubik), sans-serif", color: "#1f1633" }}>
+      <div ref={hostRef} style={{ position: "fixed", inset: 0 }} />
+
+      <div ref={hudRef} style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 5, display: "none" }}>
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "18px 22px", background: "linear-gradient(180deg, rgba(244,242,249,.92), transparent)" }}>
+          <div style={{ fontWeight: 800, fontSize: 14 }}>
+            Cyber<span style={{ color: "#1d4ed8" }}>Thulir</span>
+            <span style={{ display: "block", fontFamily: "monospace", fontSize: 10.5, color: "#9a8fb5", fontWeight: 400, marginTop: 2 }}>/ topic 1.1 / network operator</span>
+          </div>
+          <div ref={objectiveRef} style={{ background: "rgba(255,255,255,.88)", border: "1px solid rgba(29,78,216,.18)", borderRadius: 10, padding: "10px 16px", fontSize: 12.5, color: "#6a6480", maxWidth: 340, textAlign: "center", boxShadow: "0 8px 20px -12px rgba(30,50,110,.3)" }} />
+          <div ref={counterRef} className="mono" style={{ background: "rgba(255,255,255,.88)", border: "1px solid rgba(29,78,216,.18)", borderRadius: 100, padding: "8px 16px", fontSize: 12, color: "#1d4ed8", whiteSpace: "nowrap", boxShadow: "0 8px 20px -12px rgba(30,50,110,.3)" }} />
+        </div>
+
+        <div ref={toastRef} className="game-phase-toast" style={{ position: "absolute", top: 92, left: "50%", transform: "translateX(-50%) translateY(-6px)", background: "#150f23", color: "#fff", fontFamily: "monospace", fontSize: 12, fontWeight: 700, padding: "9px 18px", borderRadius: 999, opacity: 0, transition: "opacity .25s, transform .25s", whiteSpace: "nowrap" }} />
+
+        <div style={{ position: "absolute", top: "50%", left: "50%", width: 7, height: 7, margin: "-3.5px 0 0 -3.5px", borderRadius: "50%", background: "#1f1633", boxShadow: "0 0 0 2px rgba(255,255,255,.9), 0 0 6px rgba(0,0,0,.25)" }} />
+
+        <div ref={promptRef} className="game-prompt" style={{ position: "absolute", top: "56%", left: "50%", transform: "translateX(-50%)", fontFamily: "monospace", fontSize: 13, background: "rgba(255,255,255,.95)", border: "1px solid #1d4ed8", color: "#1f1633", padding: "7px 14px", borderRadius: 8, opacity: 0, transition: "opacity .15s", whiteSpace: "nowrap", boxShadow: "0 10px 24px -12px rgba(30,50,110,.35)" }}>
+          <span ref={promptTextRef} />
+        </div>
+
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, display: "flex", justifyContent: "center", padding: 16, background: "linear-gradient(0deg, rgba(244,242,249,.92), transparent)" }}>
+          <div style={{ fontFamily: "monospace", fontSize: 11, color: "#9a8fb5", textAlign: "center" }}>
+            WASD / ARROWS to move &nbsp;·&nbsp; MOUSE to look &nbsp;·&nbsp; E to connect / allow &nbsp;·&nbsp; Q to block &nbsp;·&nbsp; ESC to release cursor
+          </div>
+        </div>
+      </div>
+
+      <div ref={startOverlayRef} style={{ position: "fixed", inset: 0, zIndex: 30, display: "flex", alignItems: "center", justifyContent: "center", background: "radial-gradient(ellipse 900px 500px at 50% 20%, rgba(29,78,216,0.1), transparent 60%), rgba(244,242,249,.96)", textAlign: "center", padding: 20 }}>
+        <div style={{ maxWidth: 500 }}>
+          <div style={{ display: "inline-block", background: "rgba(242,184,75,.14)", border: "1px solid rgba(242,184,75,.35)", color: "#b8860a", fontSize: 11, padding: "4px 10px", borderRadius: 100, marginBottom: 16, fontFamily: "monospace" }}>3D · WALKABLE · OPEN ROOM</div>
+          <h1 style={{ fontSize: 26, margin: "0 0 14px", letterSpacing: "-.02em" }}>Network Operator</h1>
+          <p style={{ color: "#6a6480", fontSize: 14.5, lineHeight: 1.65, margin: "0 0 20px" }}>
+            You&rsquo;re standing in the studio. Play all three rounds without leaving the room: connect every device to the router, confirm each one&rsquo;s address, then staff the reception kiosk and decide who&rsquo;s allowed on the network.
+          </p>
+          <div style={{ display: "flex", gap: 10, justifyContent: "center", marginBottom: 22, flexWrap: "wrap" }}>
+            {["1 Connect", "2 Address", "3 Verify"].map((s) => (
+              <span key={s} style={{ fontFamily: "monospace", fontSize: 11, padding: "7px 13px", borderRadius: 100, border: "1px solid rgba(29,78,216,.2)", background: "rgba(255,255,255,.6)", color: "#6a6480" }}>{s}</span>
+            ))}
+          </div>
+          <button ref={enterBtnRef} className="btn" style={{ background: "linear-gradient(120deg,#1d4ed8,#1739a8)", color: "#fff" }}>Click to enter the room</button>
+          <div style={{ marginTop: 22, fontSize: 11.5, color: "#9a8fb5" }}>This uses your mouse to look around and will lock your cursor. Press ESC anytime to get it back.</div>
+        </div>
+      </div>
+
+      <div ref={pausedOverlayRef} style={{ display: "none", position: "fixed", inset: 0, zIndex: 20, alignItems: "center", justifyContent: "center", background: "radial-gradient(ellipse 900px 500px at 50% 20%, rgba(29,78,216,0.1), transparent 60%), rgba(244,242,249,.96)", textAlign: "center", padding: 20 }}>
+        <div>
+          <div style={{ fontFamily: "monospace", fontSize: 12, color: "#1d4ed8", marginBottom: 14, letterSpacing: ".5px" }}>PAUSED</div>
+          <h1 style={{ fontSize: 26, margin: "0 0 14px" }}>Cursor released</h1>
+          <p style={{ color: "#6a6480", fontSize: 14.5, margin: "0 0 20px" }}>Click back into the scene to keep walking around the studio.</p>
+          <button ref={resumeBtnRef} className="btn" style={{ background: "linear-gradient(120deg,#1d4ed8,#1739a8)", color: "#fff" }}>Click to resume</button>
+        </div>
+      </div>
+
+      <div ref={successOverlayRef} style={{ display: "none", position: "fixed", inset: 0, zIndex: 20, alignItems: "center", justifyContent: "center", background: "radial-gradient(ellipse 900px 500px at 50% 20%, rgba(29,78,216,0.1), transparent 60%), rgba(244,242,249,.96)", textAlign: "center", padding: 20 }}>
+        <div style={{ maxWidth: 500 }}>
+          <div style={{ fontFamily: "monospace", fontSize: 12, color: "#1d4ed8", marginBottom: 14, letterSpacing: ".5px" }}>NETWORK OPERATOR — COMPLETE</div>
+          <h1 style={{ fontSize: 26, margin: "0 0 14px" }}>Topic 1.1 — solved</h1>
+          <p style={{ color: "#6a6480", fontSize: 14.5, lineHeight: 1.65, margin: "0 0 20px" }}>Every device found the router, every device got an address, and you decided who else was allowed to join. That&rsquo;s the whole job of a network operator.</p>
+          <div ref={finalListRef} style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 18, flexWrap: "wrap" }} />
+          <div style={{ marginTop: 24, display: "flex", gap: 10, justifyContent: "center" }}>
+            <button ref={closeBtnRef} className="btn" style={{ background: "linear-gradient(120deg,#1d4ed8,#1739a8)", color: "#fff" }}>Close</button>
+            <Link href="/learn/modules/networking/1-1/done" className="btn" style={{ background: "transparent", border: "1px solid rgba(29,78,216,.3)", color: "#1f1633" }}>Continue</Link>
+          </div>
+          <div style={{ marginTop: 22, fontSize: 11.5, color: "#9a8fb5" }}>Prototype note: this proves the walkable-3D interaction model for all three rounds of Topic 1.1.</div>
+        </div>
+      </div>
+
+      <style jsx global>{`
+        .game-phase-toast.show { opacity: 1 !important; transform: translateX(-50%) translateY(0) !important; }
+        .game-prompt.show { opacity: 1 !important; }
+        .game-prompt kbd { background: #1d4ed8; color: #fff; padding: 1px 6px; border-radius: 4px; font-weight: 700; margin-right: 5px; }
+        .game-prompt kbd.block { background: #c94868; margin-left: 4px; }
+        .device-chip { font-family: monospace; font-size: 11.5px; padding: 6px 12px; border-radius: 100px; border: 1px solid rgba(29,78,216,.18); color: #6a6480; display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,.6); }
+        .device-chip .led { width: 6px; height: 6px; border-radius: 50%; background: #9a8fb5; }
+        .device-chip.on { border-color: #0d9488; color: #0d9488; }
+        .device-chip.on .led { background: #0d9488; box-shadow: 0 0 5px #0d9488; }
+      `}</style>
+    </div>
+  );
+}

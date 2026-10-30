@@ -1,0 +1,3 @@
+Campaign map art, characters (and public/story/study.webp) composed from Kenney's Isometric Miniature Dungeon and Library packs.
+Created by Kenney (www.kenney.nl), licensed CC0 1.0 (public domain): https://creativecommons.org/publicdomain/zero/1.0/
+Regenerate with: node scripts/build-campaign-art.cjs <kenney-packs-folder>

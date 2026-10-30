@@ -1,0 +1,997 @@
+[
+  {
+    "id": "schema.public",
+    "label": "Create schema \"public\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "Create schema \"public\"",
+        "sql": "CREATE SCHEMA IF NOT EXISTS \"public\"",
+        "params": []
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "table.admin_email_verification_tokens",
+    "label": "Create table \"admin_email_verification_tokens\"",
+    "summary": "Creates table \"admin_email_verification_tokens\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "admin_email_verification_tokens"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"admin_email_verification_tokens\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"admin_email_verification_tokens\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"admin_email_verification_tokens\"",
+        "sql": "CREATE TABLE \"public\".\"admin_email_verification_tokens\" (\n  \"admin_id\" uuid NOT NULL,\n  \"created_at\" timestamp DEFAULT (now()),\n  \"expires_at\" timestamp NOT NULL,\n  \"id\" uuid DEFAULT (gen_random_uuid()) NOT NULL,\n  \"token\" text NOT NULL,\n  CONSTRAINT \"admin_email_verification_tokens_pkey\" PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"admin_email_verification_tokens\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"admin_email_verification_tokens\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.admins",
+    "label": "Create table \"admins\"",
+    "summary": "Creates table \"admins\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "admins"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"admins\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"admins\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"admins\"",
+        "sql": "CREATE TABLE \"public\".\"admins\" (\n  \"admin_role\" character varying(20) DEFAULT 'admin' NOT NULL,\n  \"created_at\" timestamp DEFAULT (now()),\n  \"email\" character varying(255) NOT NULL,\n  \"id\" uuid DEFAULT (gen_random_uuid()) NOT NULL,\n  \"is_email_verified\" bool DEFAULT false NOT NULL,\n  \"name\" character varying(100) NOT NULL,\n  \"password_hash\" text NOT NULL,\n  \"updated_at\" timestamp DEFAULT (now()),\n  \"username\" character varying(30),\n  CONSTRAINT \"admins_pkey\" PRIMARY KEY (\"id\"),\n  CONSTRAINT \"ck_admin_role_allowed_v1_3dd8dbcc\" CHECK (((admin_role)::text = ANY (ARRAY[('admin'::character varying)::text, ('superior_admin'::character varying)::text])))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"admins\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"admins\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.colleges",
+    "label": "Create table \"colleges\"",
+    "summary": "Creates table \"colleges\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "colleges"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"colleges\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"colleges\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"colleges\"",
+        "sql": "CREATE TABLE \"public\".\"colleges\" (\n  \"college_name\" character varying(200) NOT NULL,\n  \"created_at\" timestamp DEFAULT (now()),\n  \"id\" uuid DEFAULT (gen_random_uuid()) NOT NULL,\n  CONSTRAINT \"colleges_pkey\" PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"colleges\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"colleges\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.email_verification_tokens",
+    "label": "Create table \"email_verification_tokens\"",
+    "summary": "Creates table \"email_verification_tokens\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "email_verification_tokens"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"email_verification_tokens\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"email_verification_tokens\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"email_verification_tokens\"",
+        "sql": "CREATE TABLE \"public\".\"email_verification_tokens\" (\n  \"created_at\" timestamp DEFAULT (now()),\n  \"expires_at\" timestamp NOT NULL,\n  \"id\" uuid DEFAULT (gen_random_uuid()) NOT NULL,\n  \"token\" text NOT NULL,\n  \"user_id\" uuid NOT NULL,\n  \"user_type\" character varying(20) DEFAULT 'learner' NOT NULL,\n  CONSTRAINT \"email_verification_tokens_pkey\" PRIMARY KEY (\"id\"),\n  CONSTRAINT \"ck_email_verification_user_type_v1_5e982853\" CHECK (((user_type)::text = ANY (ARRAY[('learner'::character varying)::text, ('student'::character varying)::text, ('faculty'::character varying)::text, ('professional'::character varying)::text, ('recruiter'::character varying)::text])))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"email_verification_tokens\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"email_verification_tokens\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.login_otps",
+    "label": "Create table \"login_otps\"",
+    "summary": "Creates table \"login_otps\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "login_otps"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"login_otps\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"login_otps\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"login_otps\"",
+        "sql": "CREATE TABLE \"public\".\"login_otps\" (\n  \"account_id\" uuid NOT NULL,\n  \"account_type\" character varying(20) NOT NULL,\n  \"created_at\" timestamp DEFAULT (now()),\n  \"expires_at\" timestamp NOT NULL,\n  \"id\" uuid DEFAULT (gen_random_uuid()) NOT NULL,\n  \"otp\" character varying(6) NOT NULL,\n  CONSTRAINT \"login_otps_pkey\" PRIMARY KEY (\"id\"),\n  CONSTRAINT \"ck_login_otp_account_type_v1_a96bfc15\" CHECK (((account_type)::text = ANY (ARRAY[('user'::character varying)::text, ('admin'::character varying)::text])))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"login_otps\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"login_otps\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.organisation",
+    "label": "Create table \"organisation\"",
+    "summary": "Creates table \"organisation\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "organisation"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"organisation\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"organisation\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"organisation\"",
+        "sql": "CREATE TABLE \"public\".\"organisation\" (\n  \"college_name\" character varying(150),\n  \"contact_number\" character varying(20),\n  \"created_at\" timestamp DEFAULT (now()),\n  \"current_status\" character varying(30) DEFAULT 'active',\n  \"department\" character varying(100),\n  \"designation\" character varying(150),\n  \"email\" character varying(255) NOT NULL,\n  \"email_change_expires_at\" timestamp,\n  \"email_change_report_token\" text,\n  \"email_change_token\" text,\n  \"id\" uuid DEFAULT (gen_random_uuid()) NOT NULL,\n  \"is_email_verified\" bool DEFAULT false NOT NULL,\n  \"last_active_at\" timestamp DEFAULT (now()),\n  \"linkedin_profile\" text,\n  \"password_hash\" text NOT NULL,\n  \"pending_email\" character varying(255),\n  \"updated_at\" timestamp DEFAULT (now()),\n  \"user_type\" character varying(20) DEFAULT 'student' NOT NULL,\n  \"username\" character varying(30) NOT NULL,\n  \"year\" character varying(20),\n  CONSTRAINT \"users_pkey\" PRIMARY KEY (\"id\"),\n  CONSTRAINT \"ck_organisation_user_type_v1_81af9dd0\" CHECK (((user_type)::text = ANY (ARRAY[('student'::character varying)::text, ('faculty'::character varying)::text])))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"organisation\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"organisation\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.password_reset_tokens",
+    "label": "Create table \"password_reset_tokens\"",
+    "summary": "Creates table \"password_reset_tokens\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "password_reset_tokens"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"password_reset_tokens\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"password_reset_tokens\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"password_reset_tokens\"",
+        "sql": "CREATE TABLE \"public\".\"password_reset_tokens\" (\n  \"created_at\" timestamp DEFAULT (now()),\n  \"expires_at\" timestamp NOT NULL,\n  \"id\" uuid DEFAULT (gen_random_uuid()) NOT NULL,\n  \"token\" text NOT NULL,\n  \"user_id\" uuid NOT NULL,\n  \"user_type\" character varying(20) DEFAULT 'learner' NOT NULL,\n  CONSTRAINT \"password_reset_tokens_pkey\" PRIMARY KEY (\"id\"),\n  CONSTRAINT \"ck_password_reset_user_type_v1_5e982853\" CHECK (((user_type)::text = ANY (ARRAY[('learner'::character varying)::text, ('student'::character varying)::text, ('faculty'::character varying)::text, ('professional'::character varying)::text, ('recruiter'::character varying)::text])))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"password_reset_tokens\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"password_reset_tokens\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.professionals",
+    "label": "Create table \"professionals\"",
+    "summary": "Creates table \"professionals\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "professionals"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"professionals\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"professionals\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"professionals\"",
+        "sql": "CREATE TABLE \"public\".\"professionals\" (\n  \"company_name\" character varying(150),\n  \"contact_number\" character varying(20),\n  \"created_at\" timestamp DEFAULT (now()),\n  \"current_status\" character varying(30) DEFAULT 'active' NOT NULL,\n  \"designation\" character varying(255),\n  \"email\" character varying(255) NOT NULL,\n  \"full_name\" character varying(100),\n  \"id\" uuid DEFAULT (gen_random_uuid()) NOT NULL,\n  \"is_email_verified\" bool DEFAULT false NOT NULL,\n  \"last_active_at\" timestamp DEFAULT (now()),\n  \"linkedin_profile\" text,\n  \"name\" character varying(100) NOT NULL,\n  \"password_hash\" text NOT NULL,\n  \"updated_at\" timestamp DEFAULT (now()),\n  \"user_type\" character varying(20) NOT NULL,\n  \"username\" character varying(30) NOT NULL,\n  CONSTRAINT \"professionals_recruiters_pkey\" PRIMARY KEY (\"id\"),\n  CONSTRAINT \"ck_professional_designation_v1_5c9367a8\" CHECK (((designation)::text = ANY (ARRAY[('HR'::character varying)::text, ('Technical'::character varying)::text, ('Management'::character varying)::text, ('Talent Acquisition'::character varying)::text]))),\n  CONSTRAINT \"ck_professional_user_type_v1_09c8103a\" CHECK (((user_type)::text = ANY (ARRAY[('professional'::character varying)::text, ('recruiter'::character varying)::text])))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"professionals\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"professionals\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.user_profiles",
+    "label": "Create table \"user_profiles\"",
+    "summary": "Creates table \"user_profiles\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "user_profiles"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"user_profiles\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"user_profiles\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"user_profiles\"",
+        "sql": "CREATE TABLE \"public\".\"user_profiles\" (\n  \"bio\" text,\n  \"created_at\" timestamp DEFAULT (now()),\n  \"github_url\" jsonb,\n  \"id\" uuid DEFAULT (gen_random_uuid()) NOT NULL,\n  \"linkedin_url\" jsonb,\n  \"phone_number\" character varying(20),\n  \"profile_image\" text,\n  \"updated_at\" timestamp DEFAULT (now()),\n  \"user_id\" uuid NOT NULL,\n  CONSTRAINT \"user_profiles_pkey\" PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"user_profiles\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"user_profiles\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.users",
+    "label": "Create table \"users\"",
+    "summary": "Creates table \"users\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "users"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"users\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"users\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"users\"",
+        "sql": "CREATE TABLE \"public\".\"users\" (\n  \"contact_number\" character varying(20),\n  \"created_at\" timestamp DEFAULT (now()),\n  \"current_status\" character varying(30) DEFAULT 'active' NOT NULL,\n  \"currently_doing\" character varying(150),\n  \"email\" character varying(255) NOT NULL,\n  \"email_change_expires_at\" timestamp,\n  \"email_change_report_token\" text,\n  \"email_change_token\" text,\n  \"id\" uuid DEFAULT (gen_random_uuid()) NOT NULL,\n  \"is_email_verified\" bool DEFAULT false NOT NULL,\n  \"last_active_at\" timestamp DEFAULT (now()),\n  \"linkedin_profile\" text,\n  \"password_hash\" text NOT NULL,\n  \"pending_email\" character varying(255),\n  \"updated_at\" timestamp DEFAULT (now()),\n  \"username\" character varying(30) NOT NULL,\n  CONSTRAINT \"users_pkey1\" PRIMARY KEY (\"id\"),\n  CONSTRAINT \"ck_user_currently_doing_v1_1c82b783\" CHECK (((currently_doing)::text = ANY (ARRAY[('Student'::character varying)::text, ('Freelancer'::character varying)::text, ('Job seeking'::character varying)::text, ('Other'::character varying)::text])))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"users\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"users\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.admin_email_verification_tokens.admin_email_verification_tokens_token_key",
+    "label": "Add unique constraint on \"admin_email_verification_tokens\" (token)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "admin_email_verification_tokens_token_key",
+        "table": "admin_email_verification_tokens"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"admin_email_verification_tokens_token_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "admin_email_verification_tokens_token_key",
+          "public",
+          "\"public\".\"admin_email_verification_tokens\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"admin_email_verification_tokens_token_key\"",
+        "sql": "ALTER TABLE \"public\".\"admin_email_verification_tokens\" ADD CONSTRAINT \"admin_email_verification_tokens_token_key\" UNIQUE (\"token\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"admin_email_verification_tokens_token_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "admin_email_verification_tokens_token_key",
+          "public",
+          "\"public\".\"admin_email_verification_tokens\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.admins.admins_email_key",
+    "label": "Add unique constraint on \"admins\" (email)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "admins_email_key",
+        "table": "admins"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"admins_email_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "admins_email_key",
+          "public",
+          "\"public\".\"admins\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"admins_email_key\"",
+        "sql": "ALTER TABLE \"public\".\"admins\" ADD CONSTRAINT \"admins_email_key\" UNIQUE (\"email\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"admins_email_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "admins_email_key",
+          "public",
+          "\"public\".\"admins\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.admins.admins_username_key",
+    "label": "Add unique constraint on \"admins\" (username)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "admins_username_key",
+        "table": "admins"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"admins_username_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "admins_username_key",
+          "public",
+          "\"public\".\"admins\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"admins_username_key\"",
+        "sql": "ALTER TABLE \"public\".\"admins\" ADD CONSTRAINT \"admins_username_key\" UNIQUE (\"username\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"admins_username_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "admins_username_key",
+          "public",
+          "\"public\".\"admins\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.colleges.colleges_college_name_key",
+    "label": "Add unique constraint on \"colleges\" (college_name)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "colleges_college_name_key",
+        "table": "colleges"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"colleges_college_name_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "colleges_college_name_key",
+          "public",
+          "\"public\".\"colleges\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"colleges_college_name_key\"",
+        "sql": "ALTER TABLE \"public\".\"colleges\" ADD CONSTRAINT \"colleges_college_name_key\" UNIQUE (\"college_name\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"colleges_college_name_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "colleges_college_name_key",
+          "public",
+          "\"public\".\"colleges\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.email_verification_tokens.email_verification_tokens_token_key",
+    "label": "Add unique constraint on \"email_verification_tokens\" (token)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "email_verification_tokens_token_key",
+        "table": "email_verification_tokens"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"email_verification_tokens_token_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "email_verification_tokens_token_key",
+          "public",
+          "\"public\".\"email_verification_tokens\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"email_verification_tokens_token_key\"",
+        "sql": "ALTER TABLE \"public\".\"email_verification_tokens\" ADD CONSTRAINT \"email_verification_tokens_token_key\" UNIQUE (\"token\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"email_verification_tokens_token_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "email_verification_tokens_token_key",
+          "public",
+          "\"public\".\"email_verification_tokens\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.organisation.learners_username_key",
+    "label": "Add unique constraint on \"organisation\" (username)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "learners_username_key",
+        "table": "organisation"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"learners_username_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "learners_username_key",
+          "public",
+          "\"public\".\"organisation\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"learners_username_key\"",
+        "sql": "ALTER TABLE \"public\".\"organisation\" ADD CONSTRAINT \"learners_username_key\" UNIQUE (\"username\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"learners_username_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "learners_username_key",
+          "public",
+          "\"public\".\"organisation\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.organisation.users_email_key",
+    "label": "Add unique constraint on \"organisation\" (email)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "users_email_key",
+        "table": "organisation"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"users_email_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "users_email_key",
+          "public",
+          "\"public\".\"organisation\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"users_email_key\"",
+        "sql": "ALTER TABLE \"public\".\"organisation\" ADD CONSTRAINT \"users_email_key\" UNIQUE (\"email\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"users_email_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "users_email_key",
+          "public",
+          "\"public\".\"organisation\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.password_reset_tokens.password_reset_tokens_token_key",
+    "label": "Add unique constraint on \"password_reset_tokens\" (token)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "password_reset_tokens_token_key",
+        "table": "password_reset_tokens"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"password_reset_tokens_token_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "password_reset_tokens_token_key",
+          "public",
+          "\"public\".\"password_reset_tokens\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"password_reset_tokens_token_key\"",
+        "sql": "ALTER TABLE \"public\".\"password_reset_tokens\" ADD CONSTRAINT \"password_reset_tokens_token_key\" UNIQUE (\"token\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"password_reset_tokens_token_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "password_reset_tokens_token_key",
+          "public",
+          "\"public\".\"password_reset_tokens\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.professionals.professionals_recruiters_email_key",
+    "label": "Add unique constraint on \"professionals\" (email)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "professionals_recruiters_email_key",
+        "table": "professionals"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"professionals_recruiters_email_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "professionals_recruiters_email_key",
+          "public",
+          "\"public\".\"professionals\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"professionals_recruiters_email_key\"",
+        "sql": "ALTER TABLE \"public\".\"professionals\" ADD CONSTRAINT \"professionals_recruiters_email_key\" UNIQUE (\"email\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"professionals_recruiters_email_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "professionals_recruiters_email_key",
+          "public",
+          "\"public\".\"professionals\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.professionals.professionals_recruiters_username_key",
+    "label": "Add unique constraint on \"professionals\" (username)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "professionals_recruiters_username_key",
+        "table": "professionals"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"professionals_recruiters_username_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "professionals_recruiters_username_key",
+          "public",
+          "\"public\".\"professionals\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"professionals_recruiters_username_key\"",
+        "sql": "ALTER TABLE \"public\".\"professionals\" ADD CONSTRAINT \"professionals_recruiters_username_key\" UNIQUE (\"username\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"professionals_recruiters_username_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "professionals_recruiters_username_key",
+          "public",
+          "\"public\".\"professionals\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.user_profiles.user_profiles_user_id_key",
+    "label": "Add unique constraint on \"user_profiles\" (user_id)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "user_profiles_user_id_key",
+        "table": "user_profiles"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"user_profiles_user_id_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_profiles_user_id_key",
+          "public",
+          "\"public\".\"user_profiles\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"user_profiles_user_id_key\"",
+        "sql": "ALTER TABLE \"public\".\"user_profiles\" ADD CONSTRAINT \"user_profiles_user_id_key\" UNIQUE (\"user_id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"user_profiles_user_id_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_profiles_user_id_key",
+          "public",
+          "\"public\".\"user_profiles\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.users.users_email_key1",
+    "label": "Add unique constraint on \"users\" (email)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "users_email_key1",
+        "table": "users"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"users_email_key1\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "users_email_key1",
+          "public",
+          "\"public\".\"users\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"users_email_key1\"",
+        "sql": "ALTER TABLE \"public\".\"users\" ADD CONSTRAINT \"users_email_key1\" UNIQUE (\"email\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"users_email_key1\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "users_email_key1",
+          "public",
+          "\"public\".\"users\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.users.users_username_key1",
+    "label": "Add unique constraint on \"users\" (username)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "users_username_key1",
+        "table": "users"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"users_username_key1\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "users_username_key1",
+          "public",
+          "\"public\".\"users\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"users_username_key1\"",
+        "sql": "ALTER TABLE \"public\".\"users\" ADD CONSTRAINT \"users_username_key1\" UNIQUE (\"username\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"users_username_key1\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "users_username_key1",
+          "public",
+          "\"public\".\"users\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.admin_email_verification_tokens.admin_email_verification_tokens_admin_id_fkey",
+    "label": "Add foreign key \"admin_email_verification_tokens_admin_id_fkey\" on \"admin_email_verification_tokens\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "admin_email_verification_tokens_admin_id_fkey",
+        "table": "admin_email_verification_tokens"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"admin_email_verification_tokens_admin_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "admin_email_verification_tokens_admin_id_fkey",
+          "public",
+          "\"public\".\"admin_email_verification_tokens\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"admin_email_verification_tokens_admin_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"admin_email_verification_tokens\"\nADD CONSTRAINT \"admin_email_verification_tokens_admin_id_fkey\"\nFOREIGN KEY (\"admin_id\")\nREFERENCES \"public\".\"admins\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"admin_email_verification_tokens_admin_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "admin_email_verification_tokens_admin_id_fkey",
+          "public",
+          "\"public\".\"admin_email_verification_tokens\""
+        ]
+      }
+    ]
+  }
+]

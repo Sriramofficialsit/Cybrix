@@ -1,0 +1,127 @@
+/* The Adventurer's Study behind the Topic 1.1 story (StudyBackdrop.tsx)
+   and the reader's vintage-game chrome: dark glass, brass trim, a
+   candle-lit library slightly out of focus. Scoped under .sb / .story-scene. */
+
+.story-scene { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; isolation: isolate; overflow: hidden; }
+/* the book gets the room: wider than the default reader, slim padding */
+.story-scene > .comic { position: relative; z-index: 1; max-width: 1760px; padding: 14px 20px 12px; }
+
+/* ---- backdrop ---- */
+.sb { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; background: #140a05; }
+/* depth of field: the room sits behind the book, softly out of focus,
+   and breathes very slowly */
+.sb-art {
+  position: absolute; inset: -3%; width: 106%; height: 106%; object-fit: cover; user-select: none;
+  filter: blur(2.5px) saturate(1.08) brightness(.88);
+  animation: sb-breathe 28s ease-in-out infinite alternate;
+}
+/* the reading lamp: a warm pool of light where the book rests */
+.sb-lamp {
+  position: absolute; left: 50%; top: 48%; width: min(1500px, 120vw); height: min(1000px, 100vh); transform: translate(-50%, -50%);
+  background: radial-gradient(closest-side, rgba(255, 196, 110, .34), rgba(255, 170, 80, .12) 55%, transparent 100%);
+  mix-blend-mode: screen;
+  animation: sb-flicker 6s ease-in-out infinite;
+}
+/* dust motes and the odd ember rising through the candlelight */
+.sb-motes { position: absolute; inset: 0; }
+.sb-motes i {
+  position: absolute; bottom: -10px; border-radius: 50%;
+  background: rgba(255, 228, 170, .7); box-shadow: 0 0 6px rgba(255, 210, 140, .7);
+  animation-name: sb-rise; animation-timing-function: linear; animation-iteration-count: infinite;
+}
+.sb-motes i.glow { background: #ffb347; box-shadow: 0 0 10px 2px rgba(255, 150, 50, .8); }
+.sb-grain {
+  position: absolute; inset: -50%; opacity: .16; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: sb-grain .8s steps(4) infinite;
+}
+.sb-vignette { position: absolute; inset: 0; background: radial-gradient(ellipse 80% 75% at 50% 48%, transparent 50%, rgba(20, 9, 3, .55) 85%, rgba(10, 4, 1, .85) 100%); }
+
+@keyframes sb-breathe { from { transform: scale(1); } to { transform: scale(1.035) translate(-.6%, -.4%); } }
+@keyframes sb-flicker { 0%, 100% { opacity: 1; } 42% { opacity: .9; } 47% { opacity: 1; } 71% { opacity: .94; } }
+@keyframes sb-rise {
+  0% { transform: translate(0, 0); opacity: 0; }
+  10% { opacity: 1; }
+  85% { opacity: .8; }
+  100% { transform: translate(var(--dx, 0), -105vh); opacity: 0; }
+}
+@keyframes sb-grain { 0% { transform: translate(0, 0); } 25% { transform: translate(-6%, 4%); } 50% { transform: translate(5%, -7%); } 75% { transform: translate(-3%, -4%); } }
+
+/* ---- quest badge (top left of the scene) ---- */
+.story-quest {
+  position: absolute; z-index: 2; top: 14px; left: 18px;
+  display: flex; align-items: center; gap: 10px; padding: 7px 14px 7px 7px; border-radius: 999px;
+  background: rgba(24, 13, 6, .62); border: 1px solid rgba(226, 182, 110, .4);
+  box-shadow: 0 10px 30px -12px rgba(0, 0, 0, .7), inset 0 1px 0 rgba(255, 230, 180, .12);
+  backdrop-filter: blur(10px) saturate(1.2); -webkit-backdrop-filter: blur(10px) saturate(1.2);
+}
+.sq-ring {
+  width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; flex: none;
+  background: conic-gradient(#f2b84b var(--p), rgba(255, 255, 255, .12) 0);
+  position: relative;
+}
+.sq-ring::before { content: ""; position: absolute; inset: 4px; border-radius: 50%; background: #2a170a; }
+.sq-ring .ic { position: relative; stroke: #f2c879; }
+.sq-text { display: flex; flex-direction: column; line-height: 1.2; }
+.sq-text small { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: rgba(242, 200, 121, .75); }
+.sq-text b { font-family: var(--font-vintage), Georgia, serif; font-weight: 400; font-size: 14px; color: #fbeccb; letter-spacing: .02em; }
+.sq-done {
+  margin-left: 4px; font-size: 10.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+  color: #1a0f05; background: linear-gradient(135deg, #fde68a, #f59e0b); padding: 4px 9px; border-radius: 999px;
+  box-shadow: 0 0 16px rgba(245, 158, 11, .55);
+}
+
+/* ---- the reader's control bar: dark glass with brass trim ---- */
+.story-scene .comic {
+  --c-ink: #fbeccb;
+  --c-mut: rgba(242, 222, 180, .7);
+  --c-pri: #f2b84b;
+  --c-line: rgba(242, 222, 180, .18);
+}
+.story-scene .comic-nav {
+  margin-top: 12px; gap: 14px; padding: 8px 10px; border-radius: 18px;
+  background: rgba(24, 13, 6, .58); border: 1px solid rgba(226, 182, 110, .32);
+  box-shadow: 0 18px 40px -20px rgba(0, 0, 0, .8), inset 0 1px 0 rgba(255, 230, 180, .1);
+  backdrop-filter: blur(12px) saturate(1.2); -webkit-backdrop-filter: blur(12px) saturate(1.2);
+}
+.story-scene .comic-pg { flex: none; display: flex; flex-direction: column; align-items: flex-start; gap: 1px; margin: 0; padding: 2px 10px; max-width: 34%; }
+.story-scene .comic-pg .pt {
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-family: var(--font-vintage), Georgia, serif; font-weight: 400; font-size: 16px; letter-spacing: .03em; color: #fbeccb;
+}
+.story-scene .comic-pg .pc { font-family: Georgia, serif; font-style: italic; font-weight: 400; font-size: 12px; color: rgba(242, 222, 180, .65); }
+
+/* progress: one gem per panel, lit as it is found */
+.story-scene .comic-dots { flex: 1; min-width: 60px; margin: 0; padding: 0 4px; gap: 5px; align-items: center; }
+.story-scene .comic-dots i { height: 7px; border-radius: 4px; background: rgba(242, 222, 180, .14); box-shadow: inset 0 0 0 1px rgba(242, 222, 180, .12); }
+.story-scene .comic-dots i.on { background: linear-gradient(180deg, #fde68a, #f2b84b 60%, #c98a1d); box-shadow: 0 0 8px rgba(242, 184, 75, .55); }
+
+.story-scene .comic button {
+  border-radius: 12px; padding: 10px 16px; font-size: 12.5px; letter-spacing: .02em;
+  border: 1px solid rgba(226, 182, 110, .38); transition: transform .14s, box-shadow .14s, background .14s, border-color .14s;
+}
+.story-scene .comic .c-alt { background: rgba(255, 240, 210, .06); color: #f3dfb6; }
+.story-scene .comic .c-alt:not(:disabled):hover { background: rgba(255, 240, 210, .12); border-color: rgba(242, 200, 121, .7); }
+.story-scene .comic .c-go {
+  border-color: #fde68a; color: #241405;
+  background: linear-gradient(180deg, #fde68a, #f2b84b 55%, #d7921f);
+  font-family: var(--font-vintage), Georgia, serif; font-weight: 400; font-size: 13.5px; letter-spacing: .04em;
+  box-shadow: 0 10px 26px -10px rgba(242, 160, 40, .8), inset 0 1px 0 rgba(255, 255, 255, .6);
+}
+.story-scene .comic .c-go:not(:disabled):hover { transform: translateY(-1px); box-shadow: 0 14px 30px -10px rgba(242, 160, 40, .95), inset 0 1px 0 rgba(255, 255, 255, .6); }
+.story-scene .comic .c-go:not(:disabled):active { transform: translateY(1px); }
+.story-scene .comic .c-go:disabled, .story-scene .comic .c-alt:disabled { opacity: .4; cursor: not-allowed; }
+
+@media (max-width: 700px) {
+  .story-scene > .comic { padding: 10px 10px 10px; }
+  .story-quest { display: none; }
+  .story-scene .comic-nav { flex-wrap: wrap; gap: 8px; }
+  .story-scene .comic-pg { flex: 1; max-width: none; }
+  .story-scene .comic-pg .pt { font-size: 14px; }
+  .story-scene .comic-dots { flex-basis: 100%; order: -1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sb, .sb * { animation: none !important; }
+  .sb-motes { display: none; }
+}

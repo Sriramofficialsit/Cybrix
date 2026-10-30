@@ -1,0 +1,155 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Rubik:wght@400;500;600;700;800&display=swap');
+  :root{
+    --bg:#f4f2f9; --ink:#1f1633; --muted:#6a6480; --muted2:#9a8fb5;
+    --violet:#7c3aed; --lav:#a78bfa; --blue:#1d4ed8; --sky:#38bdf8; --gold:#a8790f;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Rubik',-apple-system,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  a{color:var(--violet);text-decoration:none}
+  h1,h2,h3,p{margin:0}
+  .disp{font-family:'Space Grotesk',system-ui,sans-serif;letter-spacing:-.4px}
+  .mono{font-family:Monaco,Menlo,monospace}
+  .eyebrow{font-size:12px;font-weight:600;letter-spacing:.22px;text-transform:uppercase;color:var(--muted2)}
+  .ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+  .btn{appearance:none;border:0;cursor:pointer;font-family:inherit;font-weight:700;letter-spacing:.2px;text-transform:uppercase;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;gap:8px;line-height:1}
+  .card{background:rgba(255,255,255,.86);border:1px solid #ece9f4;border-radius:16px;box-shadow:0 14px 36px -22px rgba(70,40,120,.2)}
+
+  .frame{width:1200px;min-height:100%;background:var(--bg)}
+  .topbar{height:66px;background:#fff;border-bottom:1px solid #e7e5ee;display:flex;align-items:center;gap:22px;padding:0 30px}
+  .steptrack{flex:1;display:flex;align-items:center;justify-content:center;max-width:520px;margin:0 auto}
+  .steprow{display:flex;align-items:center}
+  .stepdot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none}
+  .steplbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.2px}
+  .stepline{flex:1;height:2px;margin:0 6px 15px}
+  .xpchip{display:flex;align-items:center;gap:6px;background:#eef2fd;border-radius:999px;padding:6px 13px;font-size:12px;font-weight:700;color:#1739a8;white-space:nowrap}
+
+  .pad{max-width:900px;margin:0 auto;padding:40px 40px 70px}
+  .toptag{display:inline-flex;align-items:center;gap:8px;background:rgba(29,78,216,.1);border:1px solid rgba(29,78,216,.25);color:#1739a8;border-radius:999px;padding:6px 14px;font-size:11px;font-weight:700;text-transform:uppercase}
+  h1.title{font-size:28px;font-weight:600;margin-top:14px}
+  .lead{font-size:14.5px;color:var(--muted);line-height:1.7;margin-top:8px}
+
+  .sec{margin-top:30px}
+  .sec p{font-size:14.5px;line-height:1.75;margin-bottom:12px}
+  .sec ul{margin:10px 0 16px 20px;padding:0}
+  .sec li{font-size:14px;line-height:1.7;margin-bottom:7px}
+
+  .flow{display:flex;align-items:stretch;gap:0;margin:22px 0;flex-wrap:wrap}
+  .flowstep{flex:1;min-width:160px;background:linear-gradient(160deg,rgba(29,78,216,.06),rgba(56,189,248,.03));border:1.5px solid rgba(29,78,216,.22);border-radius:14px;padding:16px 14px;text-align:center;position:relative}
+  .flowstep .n{width:26px;height:26px;border-radius:50%;background:linear-gradient(140deg,#1d4ed8,#38bdf8);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 10px}
+  .flowstep .t{font-size:12.5px;font-weight:600;line-height:1.4;color:#1f1633}
+  .flowarrow{display:flex;align-items:center;justify-content:center;width:34px;flex:none;color:#7c9fe0}
+
+  table.termtable{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px}
+  table.termtable th,table.termtable td{border:1px solid #e2ddf0;padding:10px 12px;text-align:left;vertical-align:top}
+  table.termtable th{background:#1f1633;color:#f4f2f9;font-weight:600}
+  table.termtable tr:nth-child(even) td{background:#f8f6fc}
+
+  .callout{background:#fbf3e0;border:1.5px solid var(--gold);border-radius:12px;padding:14px 18px;margin:18px 0;font-size:13.5px;line-height:1.65}
+  .callout.security{background:#f4ecf0;border-color:#e2434b;display:flex;gap:14px;align-items:flex-start}
+  .callout.security img{width:38px;height:38px;border-radius:50%;object-fit:cover;flex:none;border:2px solid rgba(226,67,75,.4)}
+  .callout b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;color:#8a6a1a}
+  .callout.security b{color:#c1323a}
+  .takeaway{margin-top:20px;padding:16px 18px;background:var(--ink);color:var(--bg);border-radius:12px;font-weight:600;font-size:14px}
+  .takeaway b{color:#f2c879}
+
+  .fwd{display:flex;justify-content:flex-end;margin-top:34px}
+  .btn-continue{background:linear-gradient(120deg,#1d4ed8,#1739a8);color:#fff;padding:14px 22px;font-size:12.5px;box-shadow:0 16px 30px -14px rgba(29,78,216,.5)}
+</style>
+</helmet>
+
+<div class="frame">
+  <div class="topbar">
+    <svg class="ic" viewBox="0 0 24 24" style="stroke:#8b8599"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    <div class="mono" style="font-size:11px;font-weight:600;color:#9a8fb5;white-space:nowrap">NETWORKING · MODULE 01 · TOPIC 1.1</div>
+    <div class="steptrack">
+      <div class="steprow" style="flex:1">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
+          <span class="stepdot" style="background:linear-gradient(140deg,#1d4ed8,#38bdf8)"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px;stroke:#fff"><path d="M5 12l4 4 10-10"/></svg></span>
+          <span class="steplbl" style="color:#1739a8">Story</span>
+        </div>
+        <div class="stepline" style="background:linear-gradient(90deg,#1d4ed8,#38bdf8)"></div>
+      </div>
+      <div class="steprow" style="flex:1">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
+          <span class="stepdot" style="background:linear-gradient(140deg,#1d4ed8,#38bdf8);box-shadow:0 0 0 4px rgba(29,78,216,.18)"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px;stroke:#fff"><rect x="4" y="4" width="16" height="16" rx="2"/></svg></span>
+          <span class="steplbl" style="color:#1739a8">Concept</span>
+        </div>
+        <div class="stepline" style="background:#e6e2ee"></div>
+      </div>
+      <div class="steprow" style="flex:1">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
+          <span class="stepdot" style="background:#fff;border:2px solid #e6e2ee"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px;stroke:#b6b0c6"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg></span>
+          <span class="steplbl" style="color:#b6b0c6">Simulate</span>
+        </div>
+        <div class="stepline" style="background:#e6e2ee"></div>
+      </div>
+      <div class="steprow">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
+          <span class="stepdot" style="background:#fff;border:2px solid #e6e2ee"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px;stroke:#b6b0c6"><path d="M12 2l2.5 5 5.5.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.5-.8Z"/></svg></span>
+          <span class="steplbl" style="color:#b6b0c6">Game</span>
+        </div>
+      </div>
+    </div>
+    <span class="xpchip"><svg class="ic" viewBox="0 0 24 24" style="width:13px;height:13px;stroke:#1739a8"><path d="M6 3h12l-1 7-5 3-5-3Z"/></svg>+15 XP</span>
+  </div>
+  <div style="height:3px;background:#eee9f7"><div style="height:100%;background:linear-gradient(90deg,#1d4ed8,#38bdf8);width:32%"></div></div>
+
+  <div class="pad">
+    <span class="toptag"><svg class="ic" viewBox="0 0 24 24" style="width:12px;height:12px;stroke:#1739a8"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>Concept · The idea, explained</span>
+    <h1 class="title">What Is a Network?</h1>
+    <p class="lead">The postal analogy, made precise.</p>
+
+    <div class="sec">
+      <p><strong>A network is a group of two or more devices connected so they can share information and resources</strong> — the digital version of a postal system.</p>
+      <p>Devices on a network are called <strong>nodes</strong>. They're linked by wired or wireless connections. Once connected, any device can send data to, or receive data from, any other device on the network — just like any address on a postal route can send or receive mail.</p>
+
+      <div class="flow">
+        <div class="flowstep"><span class="n">1</span><span class="t">Device connects to a shared network — wired or wireless</span></div>
+        <span class="flowarrow"><svg class="ic" viewBox="0 0 24 24" style="stroke:#7c9fe0"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        <div class="flowstep"><span class="n">2</span><span class="t">Each device gets an identifiable address</span></div>
+        <span class="flowarrow"><svg class="ic" viewBox="0 0 24 24" style="stroke:#7c9fe0"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        <div class="flowstep"><span class="n">3</span><span class="t">A device sends data addressed to another device</span></div>
+        <span class="flowarrow"><svg class="ic" viewBox="0 0 24 24" style="stroke:#7c9fe0"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        <div class="flowstep"><span class="n">4</span><span class="t">The network delivers the data to the correct destination</span></div>
+      </div>
+
+      <p><em>Example:</em> Sending a document from a laptop to a network-connected printer works exactly like a letter travelling from a sender's address to a recipient's address.</p>
+
+      <table class="termtable">
+        <tr><th>Postal system</th><th>Computer network</th></tr>
+        <tr><td>Street address</td><td>Device / IP address</td></tr>
+        <tr><td>Mail carrier's route</td><td>Cable or Wi-Fi signal</td></tr>
+        <tr><td>Local sorting office</td><td>Router</td></tr>
+        <tr><td>A letter</td><td>A data packet</td></tr>
+        <tr><td>Recipient's mailbox</td><td>Receiving device</td></tr>
+      </table>
+
+      <div class="callout security">
+        <img src="kevin-face.jpg" alt="">
+        <div>
+          <b>Why this matters for security</b>
+          Every device joined to a network becomes a potential entry point into that network. Understanding what a network is is the foundation for later understanding how attacks and defences work.
+        </div>
+      </div>
+
+      <div class="takeaway"><b>Key takeaway:</b> A network exists so separate devices can act as one connected system instead of isolated islands.</div>
+    </div>
+
+    <div class="fwd">
+      <button class="btn btn-continue">Continue to the Simulation<svg class="ic" viewBox="0 0 24 24" style="width:13px;height:13px;stroke:#fff"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

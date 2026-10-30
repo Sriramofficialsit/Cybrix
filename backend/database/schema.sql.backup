@@ -1,0 +1,367 @@
+--
+-- CyberThulir PostgreSQL Database Schema
+--
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- Extension
+--
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
+
+COMMENT ON EXTENSION pgcrypto IS 'cryptographic functions';
+
+SET default_tablespace = '';
+SET default_table_access_method = heap;
+
+--
+-- Table: admins
+--
+
+CREATE TABLE public.admins (
+    id UUID DEFAULT gen_random_uuid() NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    password_hash TEXT NOT NULL,
+    is_email_verified BOOLEAN DEFAULT FALSE NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    username VARCHAR(30),
+    admin_role VARCHAR(20) DEFAULT 'admin' NOT NULL,
+    token_version INTEGER DEFAULT 0 NOT NULL,
+
+    CONSTRAINT admins_pkey PRIMARY KEY (id),
+    CONSTRAINT admins_email_key UNIQUE (email),
+    CONSTRAINT admins_username_key UNIQUE (username),
+    CONSTRAINT admins_admin_role_check
+        CHECK (admin_role IN ('admin', 'superior_admin'))
+);
+
+--
+-- Table: colleges
+--
+
+CREATE TABLE public.colleges (
+    id UUID DEFAULT gen_random_uuid() NOT NULL,
+    college_name VARCHAR(200) NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT colleges_pkey PRIMARY KEY (id),
+    CONSTRAINT colleges_college_name_key UNIQUE (college_name)
+);
+
+--
+-- Table: users
+-- Learner / general users
+--
+
+CREATE TABLE public.users (
+    id UUID DEFAULT gen_random_uuid() NOT NULL,
+    username VARCHAR(30) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    password_hash TEXT NOT NULL,
+    contact_number VARCHAR(20),
+    is_email_verified BOOLEAN DEFAULT FALSE NOT NULL,
+    current_status VARCHAR(30) DEFAULT 'active' NOT NULL,
+    last_active_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    pending_email VARCHAR(255),
+    email_change_token TEXT,
+    email_change_expires_at TIMESTAMPTZ,
+    email_change_report_token TEXT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    currently_doing VARCHAR(150),
+    linkedin_profile TEXT,
+    token_version INTEGER DEFAULT 0 NOT NULL,
+
+    CONSTRAINT users_pkey PRIMARY KEY (id),
+    CONSTRAINT users_email_key UNIQUE (email),
+    CONSTRAINT users_username_key UNIQUE (username),
+    CONSTRAINT users_currently_doing_check
+        CHECK (
+            currently_doing IN (
+                'Student',
+                'Freelancer',
+                'Job seeking',
+                'Other'
+            )
+        )
+);
+
+--
+-- Table: organisation
+-- College students and faculty
+--
+
+CREATE TABLE public.organisation (
+    id UUID DEFAULT gen_random_uuid() NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    password_hash TEXT NOT NULL,
+    is_email_verified BOOLEAN DEFAULT FALSE NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    pending_email VARCHAR(255),
+    email_change_token TEXT,
+    email_change_expires_at TIMESTAMPTZ,
+    email_change_report_token TEXT,
+    username VARCHAR(30) NOT NULL,
+    current_status VARCHAR(30) DEFAULT 'active' NOT NULL,
+    user_type VARCHAR(20) DEFAULT 'student' NOT NULL,
+    last_active_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    college_name VARCHAR(150),
+    department VARCHAR(100),
+    contact_number VARCHAR(20),
+    year VARCHAR(20),
+    designation VARCHAR(150),
+    linkedin_profile TEXT,
+    token_version INTEGER DEFAULT 0 NOT NULL,
+
+    CONSTRAINT organisation_pkey PRIMARY KEY (id),
+    CONSTRAINT organisation_email_key UNIQUE (email),
+    CONSTRAINT organisation_username_key UNIQUE (username),
+    CONSTRAINT organisation_user_type_check
+        CHECK (
+            user_type IN ('student', 'faculty')
+        )
+);
+
+--
+-- Table: professionals
+-- Professionals and recruiters
+--
+
+CREATE TABLE public.professionals (
+    id UUID DEFAULT gen_random_uuid() NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    username VARCHAR(30) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    password_hash TEXT NOT NULL,
+    contact_number VARCHAR(20),
+    user_type VARCHAR(20) NOT NULL,
+    company_name VARCHAR(150),
+    designation VARCHAR(255),
+    is_email_verified BOOLEAN DEFAULT FALSE NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    current_status VARCHAR(30) DEFAULT 'active' NOT NULL,
+    last_active_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    full_name VARCHAR(100),
+    linkedin_profile TEXT,
+    token_version INTEGER DEFAULT 0 NOT NULL,
+    pending_email VARCHAR(255),
+    email_change_token TEXT,
+    email_change_expires_at TIMESTAMPTZ,
+    email_change_report_token TEXT,
+
+    CONSTRAINT professionals_pkey PRIMARY KEY (id),
+    CONSTRAINT professionals_email_key UNIQUE (email),
+    CONSTRAINT professionals_username_key UNIQUE (username),
+
+    CONSTRAINT professionals_user_type_check
+        CHECK (
+            user_type IN ('professional', 'recruiter')
+        ),
+
+    CONSTRAINT professionals_designation_check
+        CHECK (
+            designation IN (
+                'HR',
+                'Technical',
+                'Management',
+                'Talent Acquisition'
+            )
+        )
+);
+
+--
+-- Table: login_otps
+-- Common OTP table for normal users and admins
+--
+
+CREATE TABLE public.login_otps (
+    id UUID DEFAULT gen_random_uuid() NOT NULL,
+    account_id UUID NOT NULL,
+    otp TEXT NOT NULL,                  -- SHA-256 of the 6-digit code
+    account_type VARCHAR(20) NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    login_token_hash TEXT NOT NULL,     -- SHA-256 of the pending-login token
+    attempts INTEGER DEFAULT 0 NOT NULL,
+    resend_count INTEGER DEFAULT 0 NOT NULL,
+    last_sent_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
+
+    CONSTRAINT login_otps_pkey PRIMARY KEY (id),
+    CONSTRAINT login_otps_login_token_hash_key UNIQUE (login_token_hash),
+
+    CONSTRAINT login_otps_account_type_check
+        CHECK (
+            account_type IN ('user', 'admin')
+        )
+);
+
+--
+-- Table: email_verification_tokens
+-- Used by learner, student, faculty, professional and recruiter accounts
+--
+
+CREATE TABLE public.email_verification_tokens (
+    id UUID DEFAULT gen_random_uuid() NOT NULL,
+    user_id UUID NOT NULL,
+    token TEXT NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    user_type VARCHAR(20) DEFAULT 'learner' NOT NULL,
+
+    CONSTRAINT email_verification_tokens_pkey PRIMARY KEY (id),
+    CONSTRAINT email_verification_tokens_token_key UNIQUE (token),
+
+    CONSTRAINT email_verification_tokens_user_type_check
+        CHECK (
+            user_type IN (
+                'learner',
+                'student',
+                'faculty',
+                'professional',
+                'recruiter'
+            )
+        )
+);
+
+--
+-- Table: password_reset_tokens
+-- No foreign key intentionally.
+-- user_id may refer to users, organisation or professionals
+--
+
+CREATE TABLE public.password_reset_tokens (
+    id UUID DEFAULT gen_random_uuid() NOT NULL,
+    user_id UUID NOT NULL,
+    token TEXT NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    user_type VARCHAR(20) DEFAULT 'learner' NOT NULL,
+
+    CONSTRAINT password_reset_tokens_pkey PRIMARY KEY (id),
+    CONSTRAINT password_reset_tokens_token_key UNIQUE (token),
+
+    CONSTRAINT password_reset_tokens_user_type_check
+        CHECK (
+            user_type IN (
+                'learner',
+                'student',
+                'faculty',
+                'professional',
+                'recruiter'
+            )
+        )
+);
+
+--
+-- Table: user_profiles
+-- No foreign key intentionally.
+-- user_id may refer to an account in users, organisation or professionals
+--
+
+CREATE TABLE public.user_profiles (
+    id UUID DEFAULT gen_random_uuid() NOT NULL,
+    user_id UUID NOT NULL,
+    bio TEXT,
+    profile_image TEXT,
+    phone_number VARCHAR(20),
+    github_url JSONB,
+    linkedin_url JSONB,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT user_profiles_pkey PRIMARY KEY (id),
+    CONSTRAINT user_profiles_user_id_key UNIQUE (user_id)
+);
+
+--
+-- Table: admin_email_verification_tokens
+--
+
+CREATE TABLE public.admin_email_verification_tokens (
+    id UUID DEFAULT gen_random_uuid() NOT NULL,
+    admin_id UUID NOT NULL,
+    token TEXT NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT admin_email_verification_tokens_pkey PRIMARY KEY (id),
+    CONSTRAINT admin_email_verification_tokens_token_key UNIQUE (token),
+
+    CONSTRAINT admin_email_verification_tokens_admin_id_fkey
+        FOREIGN KEY (admin_id)
+        REFERENCES public.admins(id)
+        ON DELETE CASCADE
+);
+
+--
+-- Table: lab_progress (hands-on labs under Learn)
+-- No foreign key intentionally.
+-- account_id may refer to an account in users, organisation or professionals
+--
+
+CREATE TABLE public.lab_progress (
+    account_id UUID NOT NULL,
+    account_type VARCHAR(20) NOT NULL,
+    lab_slug VARCHAR(60) NOT NULL,
+    status VARCHAR(20) DEFAULT 'in_progress' NOT NULL,
+    hints_revealed INTEGER DEFAULT 0 NOT NULL,
+    hint_penalty INTEGER DEFAULT 0 NOT NULL,
+    attempts INTEGER DEFAULT 0 NOT NULL,
+    score INTEGER,
+    state JSONB DEFAULT '{}'::jsonb NOT NULL,
+    started_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    completed_at TIMESTAMPTZ,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
+
+    CONSTRAINT lab_progress_pkey PRIMARY KEY (account_id, account_type, lab_slug),
+    CONSTRAINT lab_progress_account_type_check
+        CHECK (account_type IN ('learner', 'organisation', 'professionals')),
+    CONSTRAINT lab_progress_status_check
+        CHECK (status IN ('in_progress', 'completed'))
+);
+
+--
+-- Indexes
+-- Tokens (email change, verification, reset) are stored as SHA-256 hashes.
+--
+
+CREATE INDEX login_otps_account_idx ON public.login_otps (account_id, account_type);
+
+CREATE INDEX email_verification_tokens_user_id_idx ON public.email_verification_tokens (user_id);
+CREATE INDEX password_reset_tokens_user_id_idx ON public.password_reset_tokens (user_id);
+CREATE INDEX admin_email_verification_tokens_admin_id_idx ON public.admin_email_verification_tokens (admin_id);
+CREATE INDEX lab_progress_lab_slug_idx ON public.lab_progress (lab_slug, status);
+
+CREATE INDEX users_email_change_token_idx ON public.users (email_change_token) WHERE email_change_token IS NOT NULL;
+CREATE INDEX users_email_change_report_token_idx ON public.users (email_change_report_token) WHERE email_change_report_token IS NOT NULL;
+CREATE INDEX organisation_email_change_token_idx ON public.organisation (email_change_token) WHERE email_change_token IS NOT NULL;
+CREATE INDEX organisation_email_change_report_token_idx ON public.organisation (email_change_report_token) WHERE email_change_report_token IS NOT NULL;
+CREATE INDEX professionals_email_change_token_idx ON public.professionals (email_change_token) WHERE email_change_token IS NOT NULL;
+CREATE INDEX professionals_email_change_report_token_idx ON public.professionals (email_change_report_token) WHERE email_change_report_token IS NOT NULL;
+
+CREATE INDEX users_pending_email_idx ON public.users (pending_email) WHERE pending_email IS NOT NULL;
+CREATE INDEX organisation_pending_email_idx ON public.organisation (pending_email) WHERE pending_email IS NOT NULL;
+CREATE INDEX professionals_pending_email_idx ON public.professionals (pending_email) WHERE pending_email IS NOT NULL;
+
+-- Usernames are unique regardless of case
+CREATE UNIQUE INDEX users_username_lower_key ON public.users (LOWER(username));
+CREATE UNIQUE INDEX organisation_username_lower_key ON public.organisation (LOWER(username));
+CREATE UNIQUE INDEX professionals_username_lower_key ON public.professionals (LOWER(username));
+CREATE UNIQUE INDEX admins_username_lower_key ON public.admins (LOWER(username));
+
+--
+-- End of schema
+--

@@ -1,0 +1,111 @@
+/* Networking course map: the course picture in a light frame, its
+   clickable module signs, and the module / level cards that open from
+   them. Logo colours: cyan #1fb5e0, blue #4a63b5, violet #7a52a8.
+   Scoped under .cm-*; page chrome lives in campaign-chrome.css. */
+
+.cm-frame,
+.cm-info {
+  --logo-cyan: #1fb5e0;
+  --logo-blue: #4a63b5;
+  --logo-violet: #7a52a8;
+  --logo-grad: linear-gradient(120deg, var(--logo-cyan), var(--logo-blue) 55%, var(--logo-violet));
+  --ink: #0f172a;
+  --muted: #5b6485;
+  --border: #e3e7f5;
+}
+.cm-frame { position: relative; }
+
+.cm-viewport {
+  position: relative;
+  height: clamp(540px, calc(100dvh - 230px), 940px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  border-radius: 20px;
+  background: #eef1fb;
+  border: 1px solid var(--border);
+  box-shadow: 0 24px 50px -32px rgba(40, 50, 120, .35), 0 2px 6px -2px rgba(40, 50, 120, .06);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(74, 99, 181, .45) transparent;
+  outline: none;
+}
+@media (max-width: 760px) {
+  .cm-viewport { height: calc(100dvh - 200px); }
+}
+
+/* the course picture, full width, scrolled inside the frame */
+.cm-flow { display: block; width: 100%; height: auto; user-select: none; -webkit-user-drag: none; }
+.cm-flow-wrap { position: relative; }
+
+/* each painted module sign is a button: invisible until hovered, with a
+   small progress badge tucked on its right end */
+.cm-sign { position: absolute; padding: 0; border: 0; border-radius: 999px; background: transparent; cursor: pointer; transition: box-shadow .15s, background .15s; }
+.cm-sign:hover, .cm-sign:focus-visible { outline: none; background: rgba(255, 255, 255, .12); box-shadow: 0 0 0 3px rgba(255, 255, 255, .9), 0 0 24px 4px rgba(31, 181, 224, .55); }
+.cm-sign[data-state="locked"] { cursor: help; }
+.cm-sign-badge {
+  position: absolute; right: -6px; top: -10px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
+  padding: 3px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 700; color: #fff;
+  background: var(--logo-grad); border: 2px solid #fff; box-shadow: 0 4px 10px -4px rgba(15, 23, 42, .6);
+}
+.cm-sign-badge .ic { stroke: #fff; stroke-width: 3; }
+.cm-sign[data-state="done"] .cm-sign-badge { background: linear-gradient(135deg, #10b981, #059669); }
+.cm-sign[data-state="locked"] .cm-sign-badge { background: #8a92b2; }
+.cm-sign[data-here] .cm-sign-badge { background: var(--logo-cyan); animation: cm-here 2.4s ease-in-out infinite; }
+@keyframes cm-here { 50% { box-shadow: 0 0 0 5px rgba(31, 181, 224, .3), 0 4px 10px -4px rgba(15, 23, 42, .6); } }
+@media (prefers-reduced-motion: reduce) { .cm-sign[data-here] .cm-sign-badge { animation: none; } }
+
+/* ---- module and level cards ---- */
+.cm-info-backdrop { position: fixed; inset: 0; z-index: 70; background: rgba(15, 23, 42, .45); backdrop-filter: blur(3px); display: grid; place-items: center; padding: 16px; animation: cm-fade .18s ease; }
+.cm-info {
+  position: relative; width: 100%; max-width: 460px; overflow: hidden; color: var(--ink);
+  background: #fff; border: 1px solid var(--border); border-radius: 20px;
+  box-shadow: 0 40px 80px -30px rgba(15, 23, 42, .55);
+  animation: cm-pop .22s cubic-bezier(.2, .8, .2, 1.05);
+}
+/* a thin logo-gradient band across the top */
+.cm-info::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 4px; background: var(--logo-grad); }
+.cm-info-head { position: relative; padding: 26px 26px 6px; text-align: center; }
+.cm-world-no { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; color: var(--logo-blue); }
+.cm-info-head h2 { font-size: 22px; font-weight: 700; margin-top: 6px; line-height: 1.2; color: var(--ink); }
+.cm-info-close { position: absolute; right: 12px; top: 14px; width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--border); cursor: pointer; background: #f3f6fd; display: grid; place-items: center; }
+.cm-info-close:hover { border-color: var(--logo-blue); }
+.cm-info-close .ic { stroke: var(--ink); }
+.cm-info-body { padding: 4px 26px 26px; }
+.cm-info-body p { font-size: 14px; color: var(--muted); line-height: 1.6; text-align: center; }
+.cm-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 12px; }
+.cm-chips span { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: #f3f6fd; border: 1px solid var(--border); color: var(--ink); }
+.cm-chips span .ic { stroke: currentColor; }
+.cm-chips .xp { background: #eef1fb; border-color: rgba(74, 99, 181, .35); color: var(--logo-blue); }
+.cm-chips .boss { background: #f3edf9; border-color: rgba(122, 82, 168, .35); color: var(--logo-violet); }
+.cm-stages { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 16px; }
+.cm-stage { display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 600; color: #a3a9c2; text-decoration: none; }
+.cm-stage i { width: 100%; height: 7px; border-radius: 4px; background: #e6e9f4; }
+.cm-stage[data-done] { color: var(--ink); }
+.cm-stage[data-done] i { background: var(--c); }
+.cm-stage[data-next] { color: var(--logo-blue); }
+.cm-stage[data-next] i { background: repeating-linear-gradient(90deg, var(--c) 0 6px, #e6e9f4 6px 10px); }
+a.cm-stage:hover { color: var(--logo-blue); }
+.cm-info-cta { display: flex; gap: 8px; margin-top: 22px; }
+.cm-info-cta .btn { flex: 1; justify-content: center; }
+.cm-play { color: #fff !important; background: var(--logo-grad); box-shadow: 0 14px 28px -14px rgba(74, 99, 181, .8); }
+.cm-play .ic { stroke: #fff !important; }
+.cm-play:hover { transform: translateY(-1px); }
+.cm-locked-note { display: flex; gap: 8px; align-items: center; margin-top: 18px; padding: 12px 14px; border-radius: 12px; background: #f3f6fd; border: 1px dashed rgba(74, 99, 181, .35); font-size: 12.5px; color: var(--muted); }
+.cm-locked-note .ic { stroke: var(--muted); flex: none; }
+
+/* the module card's level list */
+.cm-mod-topics { list-style: none; display: flex; flex-direction: column; gap: 6px; margin-top: 16px; }
+.cm-mod-topics button {
+  width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 12px; text-align: left; cursor: pointer;
+  font: inherit; font-size: 13.5px; color: var(--ink); background: #fff; border: 1px solid var(--border); border-radius: 12px;
+  transition: border-color .15s, background .15s;
+}
+.cm-mod-topics button:hover { background: #f3f6fd; border-color: var(--logo-blue); }
+.cm-mod-topics .mono { font-size: 11.5px; font-weight: 700; color: var(--logo-blue); }
+.cm-mod-topics b { flex: 1; font-weight: 600; }
+.cm-mod-topics .ic { flex: none; stroke: var(--logo-blue); }
+.cm-mod-topics [data-state="done"] .ic { stroke: #059669; }
+.cm-mod-topics [data-state="locked"] { color: var(--muted); }
+.cm-mod-topics [data-state="locked"] .ic { stroke: #a3a9c2; }
+
+@keyframes cm-fade { from { opacity: 0; } }
+@keyframes cm-pop { from { opacity: 0; transform: translateY(10px) scale(.98); } }

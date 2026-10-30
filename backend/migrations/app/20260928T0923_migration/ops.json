@@ -1,0 +1,552 @@
+[
+  {
+    "id": "table.lab_progress",
+    "label": "Create table \"lab_progress\"",
+    "summary": "Creates table \"lab_progress\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "lab_progress"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"lab_progress\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"lab_progress\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"lab_progress\"",
+        "sql": "CREATE TABLE \"public\".\"lab_progress\" (\n  \"account_id\" uuid NOT NULL,\n  \"account_type\" character varying(20) NOT NULL,\n  \"attempts\" int4 DEFAULT 0 NOT NULL,\n  \"completed_at\" timestamptz,\n  \"hint_penalty\" int4 DEFAULT 0 NOT NULL,\n  \"hints_revealed\" int4 DEFAULT 0 NOT NULL,\n  \"lab_slug\" character varying(60) NOT NULL,\n  \"score\" int4,\n  \"started_at\" timestamptz DEFAULT (now()) NOT NULL,\n  \"state\" jsonb DEFAULT '{}'::jsonb NOT NULL,\n  \"status\" character varying(20) DEFAULT 'in_progress' NOT NULL,\n  \"updated_at\" timestamptz DEFAULT (now()) NOT NULL,\n  CONSTRAINT \"lab_progress_pkey\" PRIMARY KEY (\"account_id\", \"account_type\", \"lab_slug\"),\n  CONSTRAINT \"ck_lab_progress_account_type_v1_bed3e337\" CHECK (((account_type)::text = ANY (ARRAY[('learner'::character varying)::text, ('organisation'::character varying)::text, ('professionals'::character varying)::text]))),\n  CONSTRAINT \"ck_lab_progress_status_v1_d87d9043\" CHECK (((status)::text = ANY (ARRAY[('in_progress'::character varying)::text, ('completed'::character varying)::text])))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"lab_progress\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"lab_progress\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.admins.token_version",
+    "label": "Add column \"token_version\" to \"admins\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "token_version",
+        "table": "admins"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"token_version\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "admins",
+          "token_version"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"token_version\"",
+        "sql": "ALTER TABLE \"public\".\"admins\" ADD COLUMN \"token_version\" int4 DEFAULT 0 NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"token_version\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "admins",
+          "token_version"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.login_otps.attempts",
+    "label": "Add column \"attempts\" to \"login_otps\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "attempts",
+        "table": "login_otps"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"attempts\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "login_otps",
+          "attempts"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"attempts\"",
+        "sql": "ALTER TABLE \"public\".\"login_otps\" ADD COLUMN \"attempts\" int4 DEFAULT 0 NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"attempts\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "login_otps",
+          "attempts"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.login_otps.last_sent_at",
+    "label": "Add column \"last_sent_at\" to \"login_otps\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "last_sent_at",
+        "table": "login_otps"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"last_sent_at\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "login_otps",
+          "last_sent_at"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"last_sent_at\"",
+        "sql": "ALTER TABLE \"public\".\"login_otps\" ADD COLUMN \"last_sent_at\" timestamptz DEFAULT (now()) NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"last_sent_at\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "login_otps",
+          "last_sent_at"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.login_otps.resend_count",
+    "label": "Add column \"resend_count\" to \"login_otps\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "resend_count",
+        "table": "login_otps"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"resend_count\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "login_otps",
+          "resend_count"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"resend_count\"",
+        "sql": "ALTER TABLE \"public\".\"login_otps\" ADD COLUMN \"resend_count\" int4 DEFAULT 0 NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"resend_count\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "login_otps",
+          "resend_count"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.organisation.token_version",
+    "label": "Add column \"token_version\" to \"organisation\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "token_version",
+        "table": "organisation"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"token_version\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "organisation",
+          "token_version"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"token_version\"",
+        "sql": "ALTER TABLE \"public\".\"organisation\" ADD COLUMN \"token_version\" int4 DEFAULT 0 NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"token_version\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "organisation",
+          "token_version"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.professionals.token_version",
+    "label": "Add column \"token_version\" to \"professionals\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "token_version",
+        "table": "professionals"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"token_version\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "professionals",
+          "token_version"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"token_version\"",
+        "sql": "ALTER TABLE \"public\".\"professionals\" ADD COLUMN \"token_version\" int4 DEFAULT 0 NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"token_version\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "professionals",
+          "token_version"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.users.token_version",
+    "label": "Add column \"token_version\" to \"users\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "token_version",
+        "table": "users"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"token_version\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "users",
+          "token_version"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"token_version\"",
+        "sql": "ALTER TABLE \"public\".\"users\" ADD COLUMN \"token_version\" int4 DEFAULT 0 NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"token_version\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "users",
+          "token_version"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.login_otps.login_token_hash",
+    "label": "Add column \"login_token_hash\" to \"login_otps\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "login_token_hash",
+        "table": "login_otps"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"login_token_hash\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "login_otps",
+          "login_token_hash"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"login_token_hash\"",
+        "sql": "ALTER TABLE \"public\".\"login_otps\" ADD COLUMN \"login_token_hash\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"login_token_hash\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "login_otps",
+          "login_token_hash"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "alterNullability.setNotNull.login_otps.login_token_hash",
+    "label": "Set NOT NULL on \"login_otps\".\"login_token_hash\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "login_token_hash",
+        "table": "login_otps"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"login_token_hash\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "login_otps",
+          "login_token_hash"
+        ]
+      },
+      {
+        "description": "ensure no NULL values in \"login_token_hash\"",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"public\".\"login_otps\" WHERE \"login_token_hash\" IS NULL) AS \"result\"",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "set NOT NULL on \"login_token_hash\"",
+        "sql": "ALTER TABLE \"public\".\"login_otps\" ALTER COLUMN \"login_token_hash\" SET NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"login_token_hash\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "login_otps",
+          "login_token_hash",
+          "NO"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "alterType.login_otps.otp",
+    "label": "Alter type of \"login_otps\".\"otp\" to text",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "otp",
+        "table": "login_otps"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"otp\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "login_otps",
+          "otp"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "alter type of \"otp\"",
+        "sql": "ALTER TABLE \"public\".\"login_otps\" ALTER COLUMN \"otp\" TYPE text USING \"otp\"::text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"otp\" has type \"text\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_attribute\" AS \"a\" INNER JOIN \"pg_class\" AS \"c\" ON \"c\".\"oid\" = \"a\".\"attrelid\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"a\".\"attname\" = $3 AND (format_type(\"a\".\"atttypid\", \"a\".\"atttypmod\")) = $4 AND NOT (\"a\".\"attisdropped\"))) AS \"result\"",
+        "params": [
+          "public",
+          "login_otps",
+          "otp",
+          "text"
+        ]
+      }
+    ],
+    "meta": {
+      "warning": "TABLE_REWRITE"
+    }
+  },
+  {
+    "id": "unique.login_otps.login_otps_login_token_hash_key",
+    "label": "Add unique constraint on \"login_otps\" (login_token_hash)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "login_otps_login_token_hash_key",
+        "table": "login_otps"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"login_otps_login_token_hash_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "login_otps_login_token_hash_key",
+          "public",
+          "\"public\".\"login_otps\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"login_otps_login_token_hash_key\"",
+        "sql": "ALTER TABLE \"public\".\"login_otps\" ADD CONSTRAINT \"login_otps_login_token_hash_key\" UNIQUE (\"login_token_hash\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"login_otps_login_token_hash_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "login_otps_login_token_hash_key",
+          "public",
+          "\"public\".\"login_otps\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.lab_progress.lab_progress_lab_slug_idx",
+    "label": "Create index \"lab_progress_lab_slug_idx\" on \"lab_progress\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "lab_progress_lab_slug_idx",
+        "table": "lab_progress"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"lab_progress_lab_slug_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"lab_progress_lab_slug_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"lab_progress_lab_slug_idx\"",
+        "sql": "CREATE INDEX \"lab_progress_lab_slug_idx\" ON \"public\".\"lab_progress\" (\"lab_slug\", \"status\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"lab_progress_lab_slug_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"lab_progress_lab_slug_idx\""
+        ]
+      }
+    ]
+  }
+]

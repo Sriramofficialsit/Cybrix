@@ -1,0 +1,9 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "title": "1.1 — Story", "x": 0, "y": 0, "w": 1240, "h": 1350, "is_interactive": true },
+    { "file": "Concept.dc.html", "title": "1.1 — Concept", "x": 1330, "y": 0, "w": 1200, "h": 1250 },
+    { "file": "Simulation.dc.html", "title": "1.1 — Simulate", "x": 2660, "y": 0, "w": 1200, "h": 1150 },
+    { "file": "Game.dc.html", "title": "1.1 — Game + Quiz", "x": 3990, "y": 0, "w": 1200, "h": 1500 }
+  ],
+  "launch": { "view": "focused", "file": "Main.dc.html" }
+}

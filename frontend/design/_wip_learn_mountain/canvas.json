@@ -1,0 +1,7 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "title": "Learn — Mountain of Mastery", "x": 0, "y": 0, "w": 1450, "h": 2650 },
+    { "file": "Networking.dc.html", "title": "Networking Module 01 — Ridgeline Trail", "x": 1620, "y": 0, "w": 1450, "h": 2550 }
+  ],
+  "launch": { "view": "canvas" }
+}

@@ -1,0 +1,155 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Rubik:wght@400;500;600;700;800&display=swap');
+  :root{
+    --bg:#f4f2f9; --ink:#1f1633; --muted:#6a6480; --muted2:#9a8fb5;
+    --violet:#7c3aed; --lav:#a78bfa; --blue:#1d4ed8; --sky:#38bdf8; --gold:#a8790f;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Rubik',-apple-system,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  h1,h2,h3,p{margin:0}
+  .disp{font-family:'Space Grotesk',system-ui,sans-serif;letter-spacing:-.4px}
+  .mono{font-family:Monaco,Menlo,monospace}
+  .ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+  .btn{appearance:none;border:0;cursor:pointer;font-family:inherit;font-weight:700;letter-spacing:.2px;text-transform:uppercase;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;gap:8px;line-height:1}
+
+  .frame{width:1200px;min-height:100%;background:var(--bg)}
+  .topbar{height:66px;background:#fff;border-bottom:1px solid #e7e5ee;display:flex;align-items:center;gap:22px;padding:0 30px}
+  .steptrack{flex:1;display:flex;align-items:center;justify-content:center;max-width:520px;margin:0 auto}
+  .steprow{display:flex;align-items:center}
+  .stepdot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none}
+  .steplbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.2px}
+  .stepline{flex:1;height:2px;margin:0 6px 15px}
+  .xpchip{display:flex;align-items:center;gap:6px;background:#eef2fd;border-radius:999px;padding:6px 13px;font-size:12px;font-weight:700;color:#1739a8;white-space:nowrap}
+
+  .pad{max-width:960px;margin:0 auto;padding:40px 40px 70px}
+  .toptag{display:inline-flex;align-items:center;gap:8px;background:rgba(29,78,216,.1);border:1px solid rgba(29,78,216,.25);color:#1739a8;border-radius:999px;padding:6px 14px;font-size:11px;font-weight:700;text-transform:uppercase}
+  h1.title{font-size:28px;font-weight:600;margin-top:14px}
+  .lead{font-size:14.5px;color:var(--muted);line-height:1.7;margin-top:8px;max-width:64ch}
+
+  .simcard{margin-top:28px;border-radius:22px;background:radial-gradient(120% 150% at 18% -10%,#1c1440 0%,#12102a 55%,#0a0816 100%);padding:40px 30px 30px;position:relative;overflow:hidden}
+  .simcard .dots{position:absolute;inset:0;opacity:.5;background-image:radial-gradient(circle,rgba(56,189,248,.24) 1px,transparent 1.3px);background-size:18px 18px}
+  .diagram{position:relative;height:340px}
+  .node{position:absolute;width:120px;background:#151130;border:1.5px solid rgba(56,189,248,.35);border-radius:12px;padding:12px;text-align:center;box-shadow:0 12px 26px -14px rgba(0,0,0,.6)}
+  .node .lbl{color:#fff;font-size:12.5px;font-weight:700}
+  .node.router{background:linear-gradient(160deg,#3a2166,#241a4a);border-color:rgba(196,181,253,.5);box-shadow:0 0 0 6px rgba(124,58,237,.14),0 16px 30px -14px rgba(0,0,0,.6)}
+  .node.active{border-color:#7ee0f5;box-shadow:0 0 0 4px rgba(126,224,245,.2),0 12px 26px -14px rgba(0,0,0,.6)}
+  .node .sub{color:rgba(231,222,251,.5);font-size:10px;margin-top:3px}
+
+  .diaglabel{margin-top:22px;background:rgba(56,189,248,.08);border:1.5px dashed rgba(56,189,248,.4);border-radius:14px;padding:16px 20px;color:#dce8f5;font-size:13.5px;font-weight:600;text-align:center;max-width:560px;margin-left:auto;margin-right:auto}
+  .diaglabel b{color:#7ee0f5}
+
+  .takehero{margin-top:20px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 18px;color:#e7e2f5;font-size:13.5px;text-align:center}
+  .takehero b{color:#fff}
+
+  .legend{display:flex;justify-content:center;gap:22px;margin-top:22px;flex-wrap:wrap}
+  .legend span{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
+  .legend i{width:10px;height:10px;border-radius:50%;display:block}
+
+  .fwd{display:flex;justify-content:flex-end;margin-top:34px}
+  .btn-continue{background:linear-gradient(120deg,#1d4ed8,#1739a8);color:#fff;padding:14px 22px;font-size:12.5px;box-shadow:0 16px 30px -14px rgba(29,78,216,.5)}
+</style>
+</helmet>
+
+<div class="frame">
+  <div class="topbar">
+    <svg class="ic" viewBox="0 0 24 24" style="stroke:#8b8599"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    <div class="mono" style="font-size:11px;font-weight:600;color:#9a8fb5;white-space:nowrap">NETWORKING · MODULE 01 · TOPIC 1.1</div>
+    <div class="steptrack">
+      <div class="steprow" style="flex:1">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
+          <span class="stepdot" style="background:linear-gradient(140deg,#1d4ed8,#38bdf8)"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px;stroke:#fff"><path d="M5 12l4 4 10-10"/></svg></span>
+          <span class="steplbl" style="color:#1739a8">Story</span>
+        </div>
+        <div class="stepline" style="background:linear-gradient(90deg,#1d4ed8,#38bdf8)"></div>
+      </div>
+      <div class="steprow" style="flex:1">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
+          <span class="stepdot" style="background:linear-gradient(140deg,#1d4ed8,#38bdf8)"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px;stroke:#fff"><path d="M5 12l4 4 10-10"/></svg></span>
+          <span class="steplbl" style="color:#1739a8">Concept</span>
+        </div>
+        <div class="stepline" style="background:linear-gradient(90deg,#1d4ed8,#38bdf8)"></div>
+      </div>
+      <div class="steprow" style="flex:1">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
+          <span class="stepdot" style="background:linear-gradient(140deg,#1d4ed8,#38bdf8);box-shadow:0 0 0 4px rgba(29,78,216,.18)"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px;stroke:#fff"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3" fill="#fff" stroke="none"/></svg></span>
+          <span class="steplbl" style="color:#1739a8">Simulate</span>
+        </div>
+        <div class="stepline" style="background:#e6e2ee"></div>
+      </div>
+      <div class="steprow">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
+          <span class="stepdot" style="background:#fff;border:2px solid #e6e2ee"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px;stroke:#b6b0c6"><path d="M12 2l2.5 5 5.5.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.5-.8Z"/></svg></span>
+          <span class="steplbl" style="color:#b6b0c6">Game</span>
+        </div>
+      </div>
+    </div>
+    <span class="xpchip"><svg class="ic" viewBox="0 0 24 24" style="width:13px;height:13px;stroke:#1739a8"><path d="M6 3h12l-1 7-5 3-5-3Z"/></svg>+15 XP</span>
+  </div>
+  <div style="height:3px;background:#eee9f7"><div style="height:100%;background:linear-gradient(90deg,#1d4ed8,#38bdf8);width:56%"></div></div>
+
+  <div class="pad">
+    <span class="toptag"><svg class="ic" viewBox="0 0 24 24" style="width:12px;height:12px;stroke:#1739a8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>Simulate · See it happen</span>
+    <h1 class="title">Every Device, Through One Router</h1>
+    <p class="lead">This is Michael's house from the story, rebuilt as a live network. Tap any device to see its role — then watch what happens when the laptop actually sends that file.</p>
+
+    <div class="simcard">
+      <div class="dots"></div>
+      <div class="diagram">
+        <div class="node router" style="left:50%;top:50%;transform:translate(-50%,-50%)">
+          <div class="lbl">Router</div>
+          <div class="sub">shared connection point</div>
+        </div>
+        <div class="node active" style="left:6%;top:8%">
+          <div class="lbl">Laptop</div>
+          <div class="sub">sending the file</div>
+        </div>
+        <div class="node" style="right:6%;top:8%">
+          <div class="lbl">Smart TV</div>
+          <div class="sub">receiving the cast</div>
+        </div>
+        <div class="node active" style="left:6%;bottom:2%">
+          <div class="lbl">Printer</div>
+          <div class="sub">receiving the file</div>
+        </div>
+        <div class="node" style="right:6%;bottom:2%">
+          <div class="lbl">Phone</div>
+          <div class="sub">connected, idle</div>
+        </div>
+
+        <svg viewBox="0 0 800 340" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none">
+          <line x1="400" y1="170" x2="140" y2="60" stroke="rgba(56,189,248,.3)" stroke-width="2"/>
+          <line x1="400" y1="170" x2="660" y2="60" stroke="rgba(56,189,248,.3)" stroke-width="2"/>
+          <line x1="400" y1="170" x2="140" y2="290" stroke="rgba(56,189,248,.3)" stroke-width="2"/>
+          <line x1="400" y1="170" x2="660" y2="290" stroke="rgba(56,189,248,.3)" stroke-width="2"/>
+          <path d="M140,60 C260,90 340,130 400,170 C340,210 260,250 140,290" fill="none" stroke="#7ee0f5" stroke-width="3" stroke-dasharray="6 6" style="filter:drop-shadow(0 0 6px rgba(126,224,245,.7))"/>
+          <circle cx="270" cy="100" r="5" fill="#7ee0f5" style="filter:drop-shadow(0 0 6px rgba(126,224,245,.9))"/>
+        </svg>
+      </div>
+
+      <div class="diaglabel">Router — <b>the shared connection point.</b> Every device joins the network through it. The laptop's file doesn't fly straight to the printer — it passes through here first.</div>
+      <div class="takehero"><b>The single takeaway:</b> Devices don't talk directly to each other — they talk through a shared connection point.</div>
+
+      <div class="legend">
+        <span><i style="background:#7ee0f5"></i>Active in this exchange</span>
+        <span><i style="background:rgba(56,189,248,.4)"></i>Connected, not part of this task</span>
+        <span><i style="background:#c4b5fd"></i>Router</span>
+      </div>
+    </div>
+
+    <div class="fwd">
+      <button class="btn btn-continue">Continue to the Game<svg class="ic" viewBox="0 0 24 24" style="width:13px;height:13px;stroke:#fff"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

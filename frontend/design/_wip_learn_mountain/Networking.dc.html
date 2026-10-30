@@ -1,0 +1,524 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Rubik:wght@400;500;600;700;800&display=swap');
+
+  :root{
+    --bg:#f4f2f9; --ink:#1f1633; --muted:#6a6480; --muted2:#9a8fb5;
+    --violet:#7c3aed; --lav:#a78bfa;
+    --blue:#1d4ed8; --sky:#38bdf8;
+    --teal:#0d9488; --gold:#a8790f;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Rubik',-apple-system,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  a{color:var(--violet);text-decoration:none}
+  h1,h2,h3,p{margin:0}
+  .disp{font-family:'Space Grotesk',system-ui,sans-serif;letter-spacing:-.4px}
+  .mono{font-family:Monaco,Menlo,monospace}
+  .eyebrow{font-size:12px;font-weight:600;letter-spacing:.22px;text-transform:uppercase;color:var(--muted2)}
+  .lead{font-size:15px;line-height:1.7;color:#6a6480}
+  .card{background:rgba(255,255,255,.72);backdrop-filter:blur(14px) saturate(1.3);border:1px solid rgba(255,255,255,.82);border-radius:16px;box-shadow:0 14px 36px -22px rgba(70,40,120,.24)}
+  .pill{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.66);border:1px solid rgba(124,58,237,.2);border-radius:999px;padding:7px 14px;font-size:12px;font-weight:600;letter-spacing:.22px;text-transform:uppercase;color:#5b21b6}
+  .btn{appearance:none;border:0;cursor:pointer;font-family:inherit;font-weight:700;letter-spacing:.2px;text-transform:uppercase;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;gap:8px;line-height:1}
+  .ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+  @keyframes flicker{0%,100%{opacity:.85;transform:scaleY(1)}50%{opacity:1;transform:scaleY(1.08)}}
+  @keyframes twinkle{0%,100%{opacity:.25}50%{opacity:.9}}
+  @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  .flame{animation:flicker 1.6s ease-in-out infinite}
+  .twinkle{animation:twinkle 3.2s ease-in-out infinite}
+  .float{animation:floaty 6s ease-in-out infinite}
+  @keyframes trailflow{to{stroke-dashoffset:-40}}
+  @keyframes trailglow{0%,100%{opacity:.75}50%{opacity:1}}
+  .trail-ahead{animation:trailflow 2.6s linear infinite}
+  .trail-live{animation:trailglow 1.8s ease-in-out infinite}
+
+  .frame{display:flex;align-items:stretch;width:1450px;min-height:100%;background:var(--bg)}
+  .sidebar{width:250px;flex:none;background:rgba(255,255,255,.66);backdrop-filter:blur(22px) saturate(1.4);border-right:1px solid rgba(124,58,237,.12);display:flex;flex-direction:column;padding:22px 16px}
+  .navi{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:11px;color:var(--muted);font-size:14px;font-weight:500}
+  .navi.on{background:rgba(124,58,237,.14);color:#3b1f75;font-weight:600}
+  .content{flex:1;max-width:1200px;padding:0}
+
+  .topbar{height:66px;flex:none;background:#fff;border-bottom:1px solid #e7e5ee;display:flex;align-items:center;gap:22px;padding:0 30px}
+  .steptrack{flex:1;display:flex;align-items:center;justify-content:center;max-width:480px;margin:0 auto}
+  .steprow{display:flex;align-items:center}
+  .stepdot{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none}
+  .steplbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.2px}
+  .stepline{flex:1;height:2px;margin:0 8px 17px}
+  .xpchip{display:flex;align-items:center;gap:6px;background:#eef2fd;border-radius:999px;padding:6px 13px;font-size:12px;font-weight:700;color:#1739a8;white-space:nowrap}
+
+  .pagepad{padding:26px 34px 60px}
+
+  .qp-wrap{position:relative}
+  .qp-node{position:relative;display:flex;flex-direction:column;align-items:center;margin-bottom:34px}
+  .qp-inner{display:flex;align-items:center;gap:18px;max-width:100%}
+  .qp-inner.r{flex-direction:row}
+  .qp-inner.l{flex-direction:row-reverse}
+  .qp-marker{width:64px;height:64px;border-radius:20px;background:#fff;border:3px solid #ece9f4;display:flex;align-items:center;justify-content:center;position:relative;flex:none;box-shadow:0 10px 22px -14px rgba(30,20,60,.3)}
+  .qp-marker.locked{background:#f5f3fa}
+  .qp-marker.current{border-color:#1d4ed8;background:rgba(29,78,216,.08);box-shadow:0 0 0 5px rgba(29,78,216,.14),0 10px 22px -14px rgba(29,78,216,.4)}
+  .qp-marker.done{border-color:#0d9488;background:rgba(13,148,136,.08)}
+  .qp-marker.boss{width:80px;height:80px;border-radius:24px;border-color:#7c3aed;background:linear-gradient(160deg,rgba(124,58,237,.1),rgba(124,58,237,.03))}
+  .qp-marker.summit{width:84px;height:84px;border-radius:50%;border-color:#a8790f;background:linear-gradient(160deg,#fff7e6,#ffe6b8)}
+  .qp-marker.chest{width:48px;height:48px;border-radius:14px;border-style:dashed}
+  .qp-marker.chest.open{border-style:solid;border-color:#a8790f;background:rgba(202,138,4,.1)}
+  .qp-lockbadge{position:absolute;bottom:-4px;right:-4px;width:22px;height:22px;border-radius:50%;background:#fff;border:2px solid var(--bg);display:flex;align-items:center;justify-content:center}
+  .qp-card{border-radius:16px;padding:17px 20px;width:340px}
+  .snowtip{position:absolute;top:-9px;left:50%;transform:translateX(-50%)}
+  .companion{display:flex;align-items:center;gap:8px;margin:0 0 12px}
+  .companion .pip{width:32px;height:32px;flex:none;border-radius:50%;overflow:hidden;border:2px solid #fff;box-shadow:0 10px 22px -14px rgba(30,40,90,.24)}
+  .companion .bubble{background:#fff;border:1px solid #ece9f4;border-radius:12px;padding:8px 13px;font-size:12px;font-weight:600;box-shadow:0 10px 22px -14px rgba(30,40,90,.24)}
+  .streakcal{display:flex;gap:5px;margin-top:10px}
+  .streakcal span{flex:1;aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;color:var(--muted2);background:#f5f3fa}
+  .streakcal span.on{background:linear-gradient(135deg,#1d4ed8,#38bdf8);color:#fff}
+</style>
+</helmet>
+
+<div class="frame">
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar">
+    <div style="display:flex;align-items:center;gap:10px;padding:4px 10px 18px">
+      <img src="logo.png" alt="" style="width:32px;height:32px;object-fit:contain">
+      <span class="disp" style="font-weight:700;font-size:16px">CyberThulir</span>
+    </div>
+    <nav style="display:flex;flex-direction:column;gap:2px">
+      <a class="navi"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>Dashboard</a>
+      <a class="navi on"><svg class="ic" viewBox="0 0 24 24"><path d="M4 5c3-2 6-2 8 0 2-2 5-2 8 0v14c-3-2-6-2-8 0-2-2-5-2-8 0Z"/><path d="M12 5v14"/></svg>Learn</a>
+      <a class="navi"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M7 10l3 2-3 2M12 14h5"/></svg>Cyber Range</a>
+      <a class="navi"><svg class="ic" viewBox="0 0 24 24"><path d="M6 3v18M6 4h11l-2.5 3L17 10H6"/></svg>CTF Arena</a>
+      <a class="navi"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6Z"/><path d="M12 3v18"/></svg>Red vs Blue</a>
+      <a class="navi"><svg class="ic" viewBox="0 0 24 24"><path d="M4 20V10M11 20V4M18 20v-7"/></svg>Leaderboard</a>
+      <a class="navi"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="8" r="5"/><path d="M8.5 12.5L7 21l5-2.5L17 21l-1.5-8.5"/></svg>Certifications</a>
+      <a class="navi"><svg class="ic" viewBox="0 0 24 24"><circle cx="9" cy="9" r="3.2"/><circle cx="16" cy="10" r="2.6"/><path d="M4 19c0-3 2.5-5 5-5s5 2 5 5M14.5 19c.3-2 1.6-3.6 3.5-4"/></svg>Community</a>
+    </nav>
+    <div style="margin-top:auto;display:flex;flex-direction:column;gap:4px">
+      <a class="navi"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3.9a7 7 0 0 0-2-1.2L14 3h-4l-.6 2.6a7 7 0 0 0-2 1.2l-2.3-.9-2 3.4 2 1.5A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.4 2.3-.9c.6.5 1.3.9 2 1.2L10 21h4l.6-2.6c.7-.3 1.4-.7 2-1.2l2.3.9 2-3.4-2-1.5c.1-.4.1-.8.1-1.2Z"/></svg>Settings</a>
+      <div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;background:rgba(124,58,237,.08);margin-top:4px">
+        <img src="bird-head.jpg" alt="" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex:none">
+        <div><div style="font-size:13px;font-weight:600">Sriram</div><div style="font-size:11px;color:var(--muted2)">Level 14 · Red track</div></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ================= CONTENT ================= -->
+  <div class="content">
+
+    <!-- STEP TRACKER TOPBAR -->
+    <div class="topbar">
+      <svg class="ic" viewBox="0 0 24 24" style="stroke:#8b8599"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      <div class="mono" style="font-size:11px;font-weight:600;color:#9a8fb5;white-space:nowrap">NETWORKING · MODULE 01 · TOPIC 1.1</div>
+      <div class="steptrack">
+        <!-- Story done -->
+        <div class="steprow" style="flex:1">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+            <span class="stepdot" style="background:linear-gradient(140deg,#1d4ed8,#38bdf8)"><svg class="ic" viewBox="0 0 24 24" style="width:16px;height:16px;stroke:#fff"><path d="M5 12l4 4 10-10"/></svg></span>
+            <span class="steplbl" style="color:#1739a8">Story</span>
+          </div>
+          <div class="stepline" style="background:linear-gradient(90deg,#1d4ed8,#38bdf8)"></div>
+        </div>
+        <!-- Concept current -->
+        <div class="steprow" style="flex:1">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+            <span class="stepdot" style="background:linear-gradient(140deg,#1d4ed8,#38bdf8);box-shadow:0 0 0 4px rgba(29,78,216,.18)"><svg class="ic" viewBox="0 0 24 24" style="width:16px;height:16px;stroke:#fff"><rect x="4" y="4" width="16" height="16" rx="2"/></svg></span>
+            <span class="steplbl" style="color:#1739a8">Concept</span>
+          </div>
+          <div class="stepline" style="background:#e6e2ee"></div>
+        </div>
+        <!-- Visualize todo -->
+        <div class="steprow" style="flex:1">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+            <span class="stepdot" style="background:#fff;border:2px solid #e6e2ee"><svg class="ic" viewBox="0 0 24 24" style="width:16px;height:16px;stroke:#b6b0c6"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg></span>
+            <span class="steplbl" style="color:#b6b0c6">Visualize</span>
+          </div>
+          <div class="stepline" style="background:#e6e2ee"></div>
+        </div>
+        <!-- Game todo -->
+        <div class="steprow" style="flex:1">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+            <span class="stepdot" style="background:#fff;border:2px solid #e6e2ee"><svg class="ic" viewBox="0 0 24 24" style="width:16px;height:16px;stroke:#b6b0c6"><rect x="3" y="8" width="18" height="9" rx="4"/><path d="M8 12h.01M6 12.5h4M17 11h.01M15 13h.01"/></svg></span>
+            <span class="steplbl" style="color:#b6b0c6">Game</span>
+          </div>
+          <div class="stepline" style="background:#e6e2ee"></div>
+        </div>
+        <!-- Done todo -->
+        <div class="steprow">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+            <span class="stepdot" style="background:#fff;border:2px solid #e6e2ee"><svg class="ic" viewBox="0 0 24 24" style="width:16px;height:16px;stroke:#b6b0c6"><circle cx="12" cy="8" r="5"/><path d="M8.5 12.5L7 21l5-2.5L17 21l-1.5-8.5"/></svg></span>
+            <span class="steplbl" style="color:#b6b0c6">Done</span>
+          </div>
+        </div>
+      </div>
+      <span class="xpchip"><svg class="ic" viewBox="0 0 24 24" style="width:13px;height:13px;stroke:#1739a8"><path d="M6 3h12l-1 7-5 3-5-3Z"/><path d="M8 21h8M12 13v8"/></svg>+40 XP</span>
+    </div>
+    <div style="height:3px;background:#eee9f7"><div style="height:100%;background:linear-gradient(90deg,#1d4ed8,#38bdf8);width:8%"></div></div>
+
+    <div class="pagepad">
+
+      <!-- HERO -->
+      <div style="position:relative;width:100%;border-radius:24px;overflow:hidden;margin-bottom:26px;background:radial-gradient(120% 150% at 18% -10%,#2a1c52 0%,#170f2c 52%,#0b0715 100%);box-shadow:0 30px 60px -28px rgba(20,20,60,.55)">
+        <svg viewBox="0 0 1200 260" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;opacity:.95">
+          <circle class="twinkle" cx="150" cy="30" r="1.6" fill="#fff"/>
+          <circle class="twinkle" cx="260" cy="55" r="1.2" fill="#fff" style="animation-delay:.5s"/>
+          <circle class="twinkle" cx="980" cy="34" r="1.6" fill="#fff" style="animation-delay:1s"/>
+          <circle class="twinkle" cx="1080" cy="60" r="1.2" fill="#fff" style="animation-delay:1.5s"/>
+          <!-- hazy back ridge -->
+          <path d="M0,220 C100,195 200,150 320,150 C440,150 500,190 600,185 C700,180 780,130 900,125 C1000,120 1100,160 1200,150 L1200,260 L0,260 Z" fill="#3a2166" opacity=".6"/>
+          <!-- front ridge with relay tower peak -->
+          <path d="M0,260 L0,235 C90,235 140,170 220,150 C290,133 340,150 410,180 C480,208 560,230 660,215 C740,203 800,150 880,120 C940,98 980,84 1020,84 C1060,84 1100,110 1150,150 C1180,174 1200,200 1200,220 L1200,260 Z" fill="#1a1030"/>
+          <!-- snow + relay tower at 1020,84 -->
+          <path d="M994,102 L1020,84 L1046,102 L1032,98 L1020,90 L1008,98Z" fill="#fff" opacity=".9"/>
+          <line x1="1020" y1="84" x2="1020" y2="46" stroke="#38bdf8" stroke-width="2.4" style="filter:drop-shadow(0 0 6px rgba(56,189,248,.85))"/>
+          <circle cx="1020" cy="46" r="4" fill="#38bdf8"/>
+          <path d="M1006 58 q14 -14 28 0" fill="none" stroke="#7ee0f5" stroke-width="2" stroke-linecap="round"/>
+          <path d="M996 68 q24 -24 48 0" fill="none" stroke="#7ee0f5" stroke-width="1.4" stroke-linecap="round" opacity=".55"/>
+          <!-- second small snow peak -->
+          <path d="M198,168 L220,150 L242,168 L230,164 L220,156 L210,164Z" fill="#fff" opacity=".6"/>
+          <!-- little device racks tucked in the valley, wired to the tower -->
+          <rect x="60" y="196" width="40" height="28" rx="6" fill="rgba(255,255,255,.06)" stroke="#38bdf8" stroke-width="1.6"/>
+          <rect x="1090" y="196" width="40" height="28" rx="6" fill="rgba(255,255,255,.06)" stroke="#38bdf8" stroke-width="1.6"/>
+          <line x1="100" y1="205" x2="994" y2="98" stroke="rgba(56,189,248,.28)" stroke-width="1.2" stroke-dasharray="2 5"/>
+          <line x1="1090" y1="205" x2="1046" y2="98" stroke="rgba(56,189,248,.28)" stroke-width="1.2" stroke-dasharray="2 5"/>
+          <!-- overlay to keep text readable on the right, art visible on the right edge -->
+          <defs><linearGradient id="fadeGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0b0715" stop-opacity=".92"/><stop offset=".8" stop-color="#0b0715" stop-opacity=".5"/><stop offset="1" stop-color="#0b0715" stop-opacity="0"/></linearGradient></defs>
+          <rect x="0" y="0" width="760" height="260" fill="url(#fadeGrad)"/>
+        </svg>
+
+        <div style="position:relative;padding:26px 36px 32px">
+          <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(231,222,251,.6);font-weight:600;margin-bottom:18px">
+            <span>Learn</span><svg class="ic" viewBox="0 0 24 24" style="width:12px;height:12px;stroke:rgba(231,222,251,.4)"><path d="M9 6l6 6-6 6"/></svg>
+            <span>Networking</span><svg class="ic" viewBox="0 0 24 24" style="width:12px;height:12px;stroke:rgba(231,222,251,.4)"><path d="M9 6l6 6-6 6"/></svg>
+            <span style="color:#7ee0f5">Module 01</span>
+          </div>
+          <span class="pill" style="margin-bottom:14px;background:rgba(56,189,248,.14);border:1px solid rgba(56,189,248,.3);color:#7ee0f5"><svg class="ic" viewBox="0 0 24 24" style="width:12px;height:12px;stroke:#7ee0f5"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg>Networking · Base Camp 01</span>
+          <h1 class="disp" style="font-size:34px;font-weight:600;color:#fff">The <span style="color:#38bdf8">Ridgeline</span> of Networking</h1>
+          <p class="lead" style="margin-top:8px;max-width:600px;color:rgba(231,222,251,.72)">6 checkpoints on the way to the summit · ~53 min total · Beginner. Every checkpoint runs the same five-stage climb — Story, Concept, Visualization, Game, Completion — watch the ring around your current camp fill as you move through it.</p>
+          <div style="margin-top:16px;display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px 14px;font-size:13px;color:rgba(231,222,251,.72);max-width:fit-content">
+            <svg class="ic flame" viewBox="0 0 24 24" style="stroke:none;fill:#f2b84b;width:16px;height:16px"><path d="M12 2c1 3-1 4-1 6 0 1.5 1 2 2 2 1.5 0 2.5-1.3 2.5-3 2 2 3.5 5 3.5 7.5C19 19.6 15.9 22 12 22s-7-2.4-7-7.5c0-3.5 2-6 3-8 .3 2 1.5 3 2.5 3S12 8.3 12 7c0-2-.5-3-.5-5Z"/></svg>
+            Your camp fire's been lit <b style="color:#fff">7 nights running</b> — clear one more stage on Topic 1.1 today to keep it burning.
+          </div>
+        </div>
+      </div>
+
+      <!-- PROGRESS ROW -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 2px 6px;gap:12px">
+        <div class="eyebrow">Trail progress</div>
+        <span class="mono" style="font-size:12.5px;font-weight:700;color:#9a8fb5"><b style="color:#1739a8">17</b>% · 0 of 6 checkpoints reached</span>
+      </div>
+      <div style="display:flex;gap:5px;margin-top:9px">
+        <i style="flex:1;height:7px;border-radius:4px;background:#eee9f7;overflow:hidden;display:block"><span style="display:block;height:100%;width:17%;background:linear-gradient(90deg,#1d4ed8,#38bdf8)"></span></i>
+        <i style="flex:1;height:7px;border-radius:4px;background:#eee9f7;overflow:hidden;display:block"></i>
+        <i style="flex:1;height:7px;border-radius:4px;background:#eee9f7;overflow:hidden;display:block"></i>
+        <i style="flex:1;height:7px;border-radius:4px;background:#eee9f7;overflow:hidden;display:block"></i>
+        <i style="flex:1;height:7px;border-radius:4px;background:#eee9f7;overflow:hidden;display:block"></i>
+        <i style="flex:1;height:7px;border-radius:4px;background:#eee9f7;overflow:hidden;display:block"></i>
+      </div>
+
+      <!-- TRAIL + SIDEBAR -->
+      <div style="display:grid;grid-template-columns:1fr 300px;gap:28px;margin-top:26px;align-items:start">
+
+        <div class="qp-wrap" style="position:relative;width:804px;height:1500px;border-radius:22px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(124,58,237,.1)">
+
+          <!-- ============ SCENIC MOUNTAIN BACKGROUND ============ -->
+          <svg viewBox="0 0 804 1500" width="804" height="1500" style="position:absolute;inset:0">
+            <defs>
+              <linearGradient id="terrainGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#dff3e2"/>
+                <stop offset=".22" stop-color="#e7e6c6"/>
+                <stop offset=".46" stop-color="#d9cdae"/>
+                <stop offset=".68" stop-color="#b7ada3"/>
+                <stop offset=".86" stop-color="#c9d3de"/>
+                <stop offset="1" stop-color="#eef4fb"/>
+              </linearGradient>
+              <radialGradient id="pathGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0" stop-color="#fff" stop-opacity=".55"/>
+                <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+              </radialGradient>
+              <linearGradient id="liveGrad" x1="0" y1="1" x2="0" y2="0">
+                <stop offset="0" stop-color="#1739a8"/><stop offset="1" stop-color="#38bdf8"/>
+              </linearGradient>
+              <linearGradient id="fiberGrad" x1="0" y1="1" x2="0" y2="0">
+                <stop offset="0" stop-color="#38bdf8"/><stop offset=".55" stop-color="#818cf8"/><stop offset="1" stop-color="#a78bfa"/>
+              </linearGradient>
+            </defs>
+
+            <rect x="0" y="0" width="804" height="1500" fill="url(#terrainGrad)"/>
+            <!-- soft light pooling around the trail corridor -->
+            <ellipse cx="420" cy="700" rx="420" ry="760" fill="url(#pathGlow)"/>
+
+            <!-- terrain texture patches -->
+            <g opacity=".35">
+              <ellipse cx="110" cy="150" rx="120" ry="60" fill="#bfe3c6"/>
+              <ellipse cx="700" cy="230" rx="140" ry="70" fill="#bfe3c6"/>
+              <ellipse cx="90" cy="480" rx="130" ry="60" fill="#cdbf98"/>
+              <ellipse cx="740" cy="560" rx="150" ry="70" fill="#cdbf98"/>
+              <ellipse cx="120" cy="880" rx="140" ry="65" fill="#a79c90"/>
+              <ellipse cx="700" cy="960" rx="150" ry="70" fill="#a79c90"/>
+              <ellipse cx="160" cy="1220" rx="150" ry="70" fill="#dce6ef"/>
+              <ellipse cx="640" cy="1260" rx="160" ry="70" fill="#dce6ef"/>
+            </g>
+
+            <!-- pine clusters (low elevation, sides of trail) -->
+            <g fill="#3f8f5c">
+              <path d="M60 210 l14 -28 14 28Z"/><path d="M72 190 l10 -20 10 20Z"/>
+              <path d="M90 240 l12 -24 12 24Z"/><path d="M100 222 l9 -18 9 18Z"/>
+              <path d="M740 300 l14 -28 14 28Z"/><path d="M752 280 l10 -20 10 20Z"/>
+              <path d="M60 560 l13 -26 13 26Z"/><path d="M71 542 l9 -18 9 18Z"/>
+            </g>
+            <!-- rocks / boulders (mid elevation) -->
+            <g fill="#8d8378">
+              <ellipse cx="640" cy="700" rx="30" ry="16"/><ellipse cx="662" cy="690" rx="16" ry="10"/>
+              <ellipse cx="130" cy="700" rx="26" ry="14"/>
+              <ellipse cx="700" cy="850" rx="28" ry="15"/><ellipse cx="90" cy="960" rx="24" ry="13"/>
+            </g>
+            <g fill="#a89c8f" opacity=".7">
+              <ellipse cx="640" cy="694" rx="10" ry="5"/><ellipse cx="130" cy="694" rx="9" ry="4"/>
+            </g>
+
+            <!-- snow dusting + clouds up near the summit -->
+            <g fill="#fff" opacity=".9">
+              <ellipse cx="620" cy="1140" rx="60" ry="16"/><ellipse cx="180" cy="1180" rx="70" ry="18"/>
+              <ellipse cx="560" cy="1340" rx="90" ry="20"/><ellipse cx="230" cy="1380" rx="80" ry="18"/>
+            </g>
+            <g fill="#fff" opacity=".8">
+              <ellipse cx="90" cy="1300" rx="60" ry="20"/><ellipse cx="120" cy="1330" rx="46" ry="16"/>
+              <ellipse cx="700" cy="1420" rx="70" ry="22"/><ellipse cx="730" cy="1400" rx="50" ry="16"/>
+            </g>
+
+            <!-- distant birds -->
+            <path d="M140 90 q6 -6 12 0 q6 -6 12 0" fill="none" stroke="#7c8f80" stroke-width="1.6" stroke-linecap="round" opacity=".6"/>
+            <path d="M660 140 q5 -5 10 0 q5 -5 10 0" fill="none" stroke="#7c8f80" stroke-width="1.4" stroke-linecap="round" opacity=".5"/>
+
+            <!-- ============ THE TRAIL — laid as a network trace through the mountain ============ -->
+            <!-- carved channel (rock cut away for the conduit) -->
+            <path id="trailPath" d="M650,20 C650,60 650,80 650,110 C650,180 250,240 180,340 C140,390 380,410 420,450 C450,480 610,520 650,580 C680,650 220,720 180,810 C150,860 380,880 420,920 C450,950 610,1000 650,1050 C680,1100 440,1200 400,1280"
+                  fill="none" stroke="#0d1424" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" opacity=".92"/>
+            <!-- graphite conduit casing -->
+            <path d="M650,20 C650,60 650,80 650,110 C650,180 250,240 180,340 C140,390 380,410 420,450 C450,480 610,520 650,580 C680,650 220,720 180,810 C150,860 380,880 420,920 C450,950 610,1000 650,1050 C680,1100 440,1200 400,1280"
+                  fill="none" stroke="#28324a" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- circuit hatch marks etched along the casing -->
+            <g stroke="#3d4b6b" stroke-width="1.4" opacity=".8">
+              <path d="M645,150 l10,-4 M645,158 l10,-4 M645,166 l10,-4"/>
+              <path d="M300,300 l4,10 M292,304 l4,10 M284,308 l4,10"/>
+              <path d="M540,540 l10,4 M540,548 l10,4 M540,556 l10,4"/>
+              <path d="M300,770 l4,10 M292,774 l4,10 M284,778 l4,10"/>
+              <path d="M540,980 l10,4 M540,988 l10,4 M540,996 l10,4"/>
+            </g>
+
+            <!-- ahead: fibre-core data line, cyan→violet -->
+            <path class="trail-ahead" d="M650,110 C650,180 250,240 180,340 C140,390 380,410 420,450 C450,480 610,520 650,580 C680,650 220,720 180,810 C150,860 380,880 420,920 C450,950 610,1000 650,1050 C680,1100 440,1200 400,1280"
+                  fill="none" stroke="url(#fiberGrad)" stroke-width="4" stroke-linecap="round" stroke-dasharray="2 10" style="filter:drop-shadow(0 0 4px rgba(56,189,248,.6))"/>
+
+            <!-- traveled stub: live glowing signal from trailhead into camp 1.1 -->
+            <path class="trail-live" d="M650,20 C650,60 650,80 650,110" fill="none" stroke="url(#liveGrad)" stroke-width="6" stroke-linecap="round" style="filter:drop-shadow(0 0 8px rgba(56,189,248,.9))"/>
+
+            <!-- traveling data packets -->
+            <rect x="-6" y="-6" width="12" height="12" rx="3" fill="#7ee0f5" style="filter:drop-shadow(0 0 5px rgba(126,224,245,.9))">
+              <animateMotion dur="7s" repeatCount="indefinite" rotate="auto" path="M650,110 C650,180 250,240 180,340 C140,390 380,410 420,450 C450,480 610,520 650,580 C680,650 220,720 180,810 C150,860 380,880 420,920 C450,950 610,1000 650,1050 C680,1100 440,1200 400,1280"/>
+            </rect>
+            <rect x="-5" y="-5" width="10" height="10" rx="2.5" fill="#c4b5fd" opacity=".9" style="filter:drop-shadow(0 0 5px rgba(196,181,253,.9))">
+              <animateMotion dur="7s" begin="-3.5s" repeatCount="indefinite" rotate="auto" path="M650,110 C650,180 250,240 180,340 C140,390 380,410 420,450 C450,480 610,520 650,580 C680,650 220,720 180,810 C150,860 380,880 420,920 C450,950 610,1000 650,1050 C680,1100 440,1200 400,1280"/>
+            </rect>
+
+            <!-- PCB via-pads at every checkpoint (behind the HTML markers at the same coords) -->
+            <g fill="none">
+              <circle cx="650" cy="110" r="46" stroke="#38bdf8" stroke-width="1.4" stroke-dasharray="2 6" opacity=".7"/>
+              <circle cx="180" cy="340" r="40" stroke="#5b6788" stroke-width="1.2" stroke-dasharray="2 6" opacity=".55"/>
+              <circle cx="420" cy="450" r="30" stroke="#5b6788" stroke-width="1.2" stroke-dasharray="2 6" opacity=".5"/>
+              <circle cx="650" cy="580" r="40" stroke="#5b6788" stroke-width="1.2" stroke-dasharray="2 6" opacity=".55"/>
+              <circle cx="180" cy="810" r="40" stroke="#5b6788" stroke-width="1.2" stroke-dasharray="2 6" opacity=".55"/>
+              <circle cx="420" cy="920" r="30" stroke="#5b6788" stroke-width="1.2" stroke-dasharray="2 6" opacity=".5"/>
+              <circle cx="650" cy="1050" r="50" stroke="#a78bfa" stroke-width="1.4" stroke-dasharray="2 6" opacity=".6"/>
+              <circle cx="400" cy="1280" r="52" stroke="#a8790f" stroke-width="1.4" stroke-dasharray="2 6" opacity=".65"/>
+            </g>
+
+            <!-- ambient network chatter -->
+            <g font-family="Monaco,Menlo,monospace" fill="#1d4ed8" opacity=".38">
+              <text x="470" y="205" font-size="10" font-weight="700">SYN</text>
+              <text x="70" y="430" font-size="10" font-weight="700">192.168.1.1</text>
+              <text x="560" y="500" font-size="10" font-weight="700">ACK</text>
+              <text x="60" y="700" font-size="10" font-weight="700">0x1F</text>
+              <text x="520" y="770" font-size="10" font-weight="700">TCP/IP</text>
+              <text x="60" y="900" font-size="10" font-weight="700">DNS</text>
+              <text x="700" y="1010" font-size="10" font-weight="700">ARP</text>
+              <text x="520" y="1200" font-size="10" font-weight="700">01001</text>
+            </g>
+
+            <!-- start marker: a root plug jacking into the trail -->
+            <circle cx="650" cy="14" r="9" fill="none" stroke="#38bdf8" stroke-width="2"/>
+            <circle cx="650" cy="14" r="3" fill="#38bdf8" style="filter:drop-shadow(0 0 6px rgba(56,189,248,.8))"/>
+            <text x="668" y="19" font-family="Monaco,Menlo,monospace" font-size="10" font-weight="700" fill="#1739a8" letter-spacing="1">ROOT</text>
+
+            <!-- summit glow + sunburst above node 1.6 -->
+            <circle cx="400" cy="1200" r="90" fill="#fff7e6" opacity=".55"/>
+          </svg>
+
+          <!-- companion bubble for current node -->
+          <div class="companion" style="position:absolute;left:492px;top:8px;width:260px">
+            <span class="pip"><img src="bird-head.jpg" alt="" style="width:100%;height:100%;object-fit:cover"></span>
+            <span class="bubble">Two devices, one shared link — let's start routing.</span>
+          </div>
+
+          <!-- 1.1 current: base camp -->
+          <div style="position:absolute;left:650px;top:110px;transform:translate(-50%,-50%)">
+            <svg class="snowtip" viewBox="0 0 60 26" width="60" height="26" style="position:absolute;top:26px;left:50%;transform:translateX(-50%)"><ellipse cx="30" cy="20" rx="26" ry="7" fill="#4c9a6a" opacity=".35"/></svg>
+            <button class="qp-marker current">
+              <svg viewBox="0 0 84 84" style="position:absolute;inset:-8px;pointer-events:none">
+                <circle cx="42" cy="42" r="34" fill="none" stroke="#1d4ed8" stroke-width="3" stroke-dasharray="10 200"/>
+              </svg>
+              <svg class="ic" viewBox="0 0 24 24" style="width:26px;height:26px;stroke:#1d4ed8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg>
+            </button>
+          </div>
+          <div class="card qp-card" style="position:absolute;left:294px;top:80px;background:linear-gradient(160deg,rgba(255,255,255,.96),rgba(238,243,253,.85));border:1px solid rgba(29,78,216,.25);box-shadow:0 16px 30px -18px rgba(29,78,216,.4)">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+              <span class="mono" style="font-size:10.5px;font-weight:700;letter-spacing:.5px;color:#9a8fb5">TOPIC 1.1</span>
+              <span style="display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;color:var(--gold)"><svg class="ic" viewBox="0 0 24 24" style="width:11px;height:11px;stroke:var(--gold)"><path d="M6 3h12l-1 7-5 3-5-3Z"/></svg>+40 XP</span>
+            </div>
+            <div class="disp" style="font-size:16.5px;font-weight:700;margin-top:6px">What is a Network?</div>
+            <p style="font-size:13px;color:#726c86;margin-top:5px;line-height:1.55">Two-plus devices, one shared connection point.</p>
+            <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+              <span style="display:inline-flex;align-items:center;gap:5px;background:rgba(124,58,237,.06);color:#726c86;font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px"><svg class="ic" viewBox="0 0 24 24" style="width:11px;height:11px"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>8–10 min</span>
+              <span style="display:inline-flex;align-items:center;background:rgba(124,58,237,.06);color:#726c86;font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px">Beginner</span>
+            </div>
+            <div style="margin-top:14px">
+              <a class="btn" style="background:linear-gradient(120deg,#1d4ed8,#1739a8);color:#fff;padding:10px 16px;font-size:11.5px;box-shadow:0 10px 20px -10px rgba(29,78,216,.55)">Continue climb<svg class="ic" viewBox="0 0 24 24" style="width:12px;height:12px;stroke:#fff"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            </div>
+          </div>
+
+          <!-- 1.2 locked -->
+          <button class="qp-marker locked" style="position:absolute;left:180px;top:340px;transform:translate(-50%,-50%)"><svg class="ic" viewBox="0 0 24 24" style="stroke:#a49dbb"><path d="M3 8l9-5 9 5v8l-9 5-9-5Z"/><path d="M12 3v18M3 8l9 5 9-5"/></svg><span class="qp-lockbadge"><svg class="ic" viewBox="0 0 24 24" style="width:10px;height:10px;stroke:#a49dbb"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span></button>
+          <div class="card qp-card" style="position:absolute;left:236px;top:310px;background:linear-gradient(160deg,rgba(255,255,255,.9),rgba(255,255,255,.62));border:1px solid #ece9f4;opacity:.75">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+              <span class="mono" style="font-size:10.5px;font-weight:700;letter-spacing:.5px;color:#9a8fb5">TOPIC 1.2</span>
+              <span style="display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;color:var(--gold)"><svg class="ic" viewBox="0 0 24 24" style="width:11px;height:11px;stroke:var(--gold)"><path d="M6 3h12l-1 7-5 3-5-3Z"/></svg>+40 XP</span>
+            </div>
+            <div class="disp" style="font-size:16.5px;font-weight:700;margin-top:6px;color:#4b4560">Why Do Computers Communicate?</div>
+            <p style="font-size:13px;color:#726c86;margin-top:5px;line-height:1.55">Sharing resources, data, tasks and services.</p>
+            <div style="margin-top:14px"><span style="font-size:11px;font-weight:600;color:#8a83a0;display:inline-flex;align-items:center;gap:5px"><svg class="ic" viewBox="0 0 24 24" style="width:11px;height:11px;stroke:#8a83a0"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Unlocks after Topic 1.1</span></div>
+          </div>
+
+          <!-- chest a -->
+          <button class="qp-marker chest" style="position:absolute;left:420px;top:450px;transform:translate(-50%,-50%)"><svg class="ic" viewBox="0 0 24 24" style="width:19px;height:19px;stroke:#a49dbb"><rect x="3" y="10" width="18" height="10" rx="2"/><path d="M3 10l2-5h14l2 5M12 10v4"/></svg><span class="qp-lockbadge" style="width:16px;height:16px"><svg class="ic" viewBox="0 0 24 24" style="width:8px;height:8px;stroke:#a49dbb"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span></button>
+
+          <!-- 1.3 locked -->
+          <button class="qp-marker locked" style="position:absolute;left:650px;top:580px;transform:translate(-50%,-50%)"><svg class="ic" viewBox="0 0 24 24" style="stroke:#a49dbb"><path d="M4 8h16M4 12h16M4 16h10"/></svg><span class="qp-lockbadge"><svg class="ic" viewBox="0 0 24 24" style="width:10px;height:10px;stroke:#a49dbb"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span></button>
+          <div class="card qp-card" style="position:absolute;left:294px;top:550px;background:linear-gradient(160deg,rgba(255,255,255,.9),rgba(255,255,255,.62));border:1px solid #ece9f4;opacity:.75">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+              <span class="mono" style="font-size:10.5px;font-weight:700;letter-spacing:.5px;color:#9a8fb5">TOPIC 1.3</span>
+              <span style="display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;color:var(--gold)"><svg class="ic" viewBox="0 0 24 24" style="width:11px;height:11px;stroke:var(--gold)"><path d="M6 3h12l-1 7-5 3-5-3Z"/></svg>+40 XP</span>
+            </div>
+            <div class="disp" style="font-size:16.5px;font-weight:700;margin-top:6px;color:#4b4560">Types of Networks</div>
+            <p style="font-size:13px;color:#726c86;margin-top:5px;line-height:1.55">LAN, MAN, WAN — same idea, bigger circle.</p>
+            <div style="margin-top:14px"><span style="font-size:11px;font-weight:600;color:#8a83a0;display:inline-flex;align-items:center;gap:5px"><svg class="ic" viewBox="0 0 24 24" style="width:11px;height:11px;stroke:#8a83a0"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Unlocks after Topic 1.2</span></div>
+          </div>
+
+          <!-- 1.4 locked -->
+          <button class="qp-marker locked" style="position:absolute;left:180px;top:810px;transform:translate(-50%,-50%)"><svg class="ic" viewBox="0 0 24 24" style="stroke:#a49dbb"><circle cx="9" cy="9" r="3.2"/><circle cx="16" cy="10" r="2.6"/><path d="M4 19c0-3 2.5-5 5-5s5 2 5 5"/></svg><span class="qp-lockbadge"><svg class="ic" viewBox="0 0 24 24" style="width:10px;height:10px;stroke:#a49dbb"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span></button>
+          <div class="card qp-card" style="position:absolute;left:236px;top:780px;background:linear-gradient(160deg,rgba(255,255,255,.9),rgba(255,255,255,.62));border:1px solid #ece9f4;opacity:.75">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+              <span class="mono" style="font-size:10.5px;font-weight:700;letter-spacing:.5px;color:#9a8fb5">TOPIC 1.4</span>
+              <span style="display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;color:var(--gold)"><svg class="ic" viewBox="0 0 24 24" style="width:11px;height:11px;stroke:var(--gold)"><path d="M6 3h12l-1 7-5 3-5-3Z"/></svg>+40 XP</span>
+            </div>
+            <div class="disp" style="font-size:16.5px;font-weight:700;margin-top:6px;color:#4b4560">Clients and Servers</div>
+            <p style="font-size:13px;color:#726c86;margin-top:5px;line-height:1.55">One asks, one answers.</p>
+            <div style="margin-top:14px"><span style="font-size:11px;font-weight:600;color:#8a83a0;display:inline-flex;align-items:center;gap:5px"><svg class="ic" viewBox="0 0 24 24" style="width:11px;height:11px;stroke:#8a83a0"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Unlocks after Topic 1.3</span></div>
+          </div>
+
+          <!-- chest b -->
+          <button class="qp-marker chest" style="position:absolute;left:420px;top:920px;transform:translate(-50%,-50%)"><svg class="ic" viewBox="0 0 24 24" style="width:19px;height:19px;stroke:#a49dbb"><rect x="3" y="10" width="18" height="10" rx="2"/><path d="M3 10l2-5h14l2 5M12 10v4"/></svg><span class="qp-lockbadge" style="width:16px;height:16px"><svg class="ic" viewBox="0 0 24 24" style="width:8px;height:8px;stroke:#a49dbb"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span></button>
+
+          <!-- 1.5 boss / lodge -->
+          <div style="position:absolute;left:650px;top:1050px;transform:translate(-50%,-50%)">
+            <svg class="snowtip" viewBox="0 0 70 20" width="70" height="20" style="position:absolute;top:-16px;left:50%;transform:translateX(-50%)"><path d="M10,20 L35,2 L60,20 L46,16 L35,8 L24,16Z" fill="#fff" opacity=".85"/></svg>
+            <button class="qp-marker boss"><svg class="ic" viewBox="0 0 24 24" style="width:32px;height:32px;stroke:#7c3aed"><path d="M4 20V11l4-4 4 4 4-4 4 4v9Z"/><path d="M4 20h16"/></svg></button>
+          </div>
+          <div class="card qp-card" style="position:absolute;left:294px;top:1020px;background:linear-gradient(160deg,rgba(255,255,255,.9),rgba(255,255,255,.62));border:1px solid rgba(124,58,237,.35);opacity:.75">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+              <span class="mono" style="font-size:10.5px;font-weight:700;letter-spacing:.5px;color:#6d28d9">TOPIC 1.5</span>
+              <span style="display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;color:var(--gold)"><svg class="ic" viewBox="0 0 24 24" style="width:11px;height:11px;stroke:var(--gold)"><path d="M6 3h12l-1 7-5 3-5-3Z"/></svg>+60 XP</span>
+            </div>
+            <div class="disp" style="font-size:16.5px;font-weight:700;margin-top:6px;color:#4b4560">A Simple Home Network</div>
+            <p style="font-size:13px;color:#726c86;margin-top:5px;line-height:1.55">The high camp — everything above, running quietly at home.</p>
+            <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+              <span style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px;background:rgba(124,58,237,.1);color:#6d28d9">Capstone</span>
+            </div>
+            <div style="margin-top:14px"><span style="font-size:11px;font-weight:600;color:#8a83a0;display:inline-flex;align-items:center;gap:5px"><svg class="ic" viewBox="0 0 24 24" style="width:11px;height:11px;stroke:#8a83a0"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Unlocks after Topic 1.4</span></div>
+          </div>
+
+          <!-- 1.6 summit -->
+          <div style="position:absolute;left:400px;top:1280px;transform:translate(-50%,-50%)">
+            <svg viewBox="0 0 90 40" width="90" height="40" style="position:absolute;top:-34px;left:50%;transform:translateX(-50%)">
+              <circle cx="45" cy="20" r="18" fill="#fff7e6" opacity=".9"/>
+              <line x1="45" y1="20" x2="45" y2="2" stroke="var(--gold)" stroke-width="2"/>
+              <path d="M45,2 L65,9 L45,16Z" fill="var(--gold)"/>
+            </svg>
+            <button class="qp-marker summit"><svg class="ic" viewBox="0 0 24 24" style="width:26px;height:26px;stroke:var(--gold)"><path d="M4 20l6-11 4 6 3-5 3 10Z"/></svg></button>
+          </div>
+          <div class="card qp-card" style="position:absolute;left:456px;top:1250px;background:linear-gradient(160deg,rgba(255,255,255,.9),rgba(255,255,255,.62));border:1px solid #ece9f4;opacity:.75">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+              <span class="mono" style="font-size:10.5px;font-weight:700;letter-spacing:.5px;color:#9a8fb5">TOPIC 1.6</span>
+              <span style="display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;color:var(--gold)"><svg class="ic" viewBox="0 0 24 24" style="width:11px;height:11px;stroke:var(--gold)"><path d="M6 3h12l-1 7-5 3-5-3Z"/></svg>+50 XP</span>
+            </div>
+            <div class="disp" style="font-size:16.5px;font-weight:700;margin-top:6px;color:#4b4560">Common Networking Terms</div>
+            <p style="font-size:13px;color:#726c86;margin-top:5px;line-height:1.55">Node, bandwidth, packet, IP, latency, protocol — the summit.</p>
+            <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+              <span style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px;background:rgba(202,138,4,.1);color:var(--gold)">Review</span>
+            </div>
+            <div style="margin-top:14px"><span style="font-size:11px;font-weight:600;color:#8a83a0;display:inline-flex;align-items:center;gap:5px"><svg class="ic" viewBox="0 0 24 24" style="width:11px;height:11px;stroke:#8a83a0"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Unlocks after Topic 1.5</span></div>
+          </div>
+
+        </div>
+
+        <!-- SIDEBAR -->
+        <div style="display:flex;flex-direction:column;gap:16px;position:sticky;top:20px">
+          <div class="card" style="padding:20px">
+            <div class="eyebrow" style="margin-bottom:14px">Peaks conquered</div>
+            <div style="display:flex;align-items:center;gap:16px">
+              <div style="width:96px;height:96px;border-radius:50%;background:conic-gradient(#1d4ed8 0% 17%,#eee9f7 17% 100%);display:flex;align-items:center;justify-content:center;flex:none">
+                <div style="width:74px;height:74px;border-radius:50%;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center">
+                  <span class="disp" style="font-size:16px;font-weight:700">0/6</span>
+                  <span style="font-size:9px;color:#9a8fb5">camps</span>
+                </div>
+              </div>
+              <div>
+                <div style="font-size:12.5px;color:#4b4560;font-weight:600">~44 min left</div>
+                <div style="font-size:11px;color:#9a8fb5;margin-top:3px">of 53 min total</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="padding:20px">
+            <div class="eyebrow" style="margin-bottom:6px">Your gear</div>
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 2px">
+              <span style="width:34px;height:34px;border-radius:10px;background:rgba(242,184,75,.18);display:flex;align-items:center;justify-content:center;flex:none">
+                <svg class="ic flame" viewBox="0 0 24 24" style="stroke:none;fill:var(--gold);width:17px;height:17px"><path d="M12 2c1 3-1 4-1 6 0 1.5 1 2 2 2 1.5 0 2.5-1.3 2.5-3 2 2 3.5 5 3.5 7.5C19 19.6 15.9 22 12 22s-7-2.4-7-7.5c0-3.5 2-6 3-8 .3 2 1.5 3 2.5 3S12 8.3 12 7c0-2-.5-3-.5-5Z"/></svg>
+              </span>
+              <div><div style="font-size:13px;font-weight:600">7-day camp fire</div><div style="font-size:10.5px;color:#9a8fb5">Best: 12 nights</div></div>
+            </div>
+            <div class="streakcal">
+              <span class="on">M</span><span class="on">T</span><span class="on">W</span><span class="on">T</span><span class="on">F</span><span class="on" style="outline:2px solid var(--gold);outline-offset:1px">S</span><span>S</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:12px 2px 0">
+              <span style="width:34px;height:34px;border-radius:10px;background:rgba(124,58,237,.12);display:flex;align-items:center;justify-content:center;flex:none">
+                <svg class="ic" viewBox="0 0 24 24" style="stroke:var(--violet);width:17px;height:17px"><path d="M6 3h12l-1 7-5 3-5-3Z"/><path d="M8 21h8M12 13v8"/></svg>
+              </span>
+              <div><div style="font-size:13px;font-weight:600">340 XP</div><div style="font-size:10.5px;color:#9a8fb5">+40 more on Topic 1.1</div></div>
+            </div>
+          </div>
+
+          <a class="btn" style="width:100%;background:linear-gradient(120deg,#1d4ed8,#1739a8);color:#fff;padding:15px 18px;border-radius:14px;box-shadow:0 18px 34px -16px rgba(29,78,216,.5)">
+            <svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px;stroke:#fff"><path d="M6 4l14 8-14 8Z"/></svg>Resume Topic 1.1
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

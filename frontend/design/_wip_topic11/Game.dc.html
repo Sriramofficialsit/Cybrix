@@ -1,0 +1,174 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Rubik:wght@400;500;600;700;800&display=swap');
+  :root{
+    --bg:#f4f2f9; --ink:#1f1633; --muted:#6a6480; --muted2:#9a8fb5;
+    --violet:#7c3aed; --lav:#a78bfa; --blue:#1d4ed8; --sky:#38bdf8; --gold:#a8790f;
+    --teal:#0d9488; --rose:#e2434b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Rubik',-apple-system,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  h1,h2,h3,p{margin:0}
+  .disp{font-family:'Space Grotesk',system-ui,sans-serif;letter-spacing:-.4px}
+  .mono{font-family:Monaco,Menlo,monospace}
+  .ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+  .btn{appearance:none;border:0;cursor:pointer;font-family:inherit;font-weight:700;letter-spacing:.2px;text-transform:uppercase;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;gap:8px;line-height:1}
+  .card{background:#fff;border:1px solid #ece9f4;border-radius:16px;box-shadow:0 14px 36px -22px rgba(70,40,120,.2)}
+
+  .frame{width:1200px;min-height:100%;background:var(--bg)}
+  .topbar{height:66px;background:#fff;border-bottom:1px solid #e7e5ee;display:flex;align-items:center;gap:22px;padding:0 30px}
+  .steptrack{flex:1;display:flex;align-items:center;justify-content:center;max-width:520px;margin:0 auto}
+  .steprow{display:flex;align-items:center}
+  .stepdot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none}
+  .steplbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.2px}
+  .stepline{flex:1;height:2px;margin:0 6px 15px}
+  .xpchip{display:flex;align-items:center;gap:6px;background:#eef2fd;border-radius:999px;padding:6px 13px;font-size:12px;font-weight:700;color:#1739a8;white-space:nowrap}
+
+  .pad{max-width:960px;margin:0 auto;padding:40px 40px 70px}
+  .toptag{display:inline-flex;align-items:center;gap:8px;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.25);color:#5b21b6;border-radius:999px;padding:6px 14px;font-size:11px;font-weight:700;text-transform:uppercase}
+  h1.title{font-size:28px;font-weight:600;margin-top:14px}
+  .lead{font-size:14.5px;color:var(--muted);line-height:1.7;margin-top:8px;max-width:64ch}
+
+  .puzzle{margin-top:28px;padding:24px}
+  .puzzle-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .puzzle-title{font-size:15px;font-weight:700}
+  .puzzle-sub{font-size:12px;color:var(--muted2);margin-top:2px}
+  .matchgrid{display:grid;grid-template-columns:1fr 40px 1fr;gap:10px;align-items:center}
+  .matchpill{background:#f8f6fc;border:1.5px solid #e2ddf0;border-radius:10px;padding:11px 14px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:10px}
+  .matchpill.left{border-color:rgba(124,58,237,.3);background:rgba(124,58,237,.05)}
+  .matchpill.right{border-color:rgba(13,148,136,.3);background:rgba(13,148,136,.06)}
+  .matchpill.right.wrongslot{border-color:rgba(226,67,75,.4);background:rgba(226,67,75,.06)}
+  .matchline{height:2px;background:repeating-linear-gradient(90deg,#c4b5fd 0 6px,transparent 6px 11px)}
+  .num{width:20px;height:20px;border-radius:50%;background:var(--violet);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none}
+  .num.done{background:var(--teal)}
+
+  .quizsec{margin-top:34px}
+  .qcard{margin-bottom:18px;padding:20px 22px}
+  .qtext{font-weight:700;font-size:14.5px;margin-bottom:14px}
+  .opt{width:100%;text-align:left;border:2px solid #e2ddf0;background:#fff;border-radius:10px;padding:11px 16px;font-family:inherit;font-size:13.5px;font-weight:600;margin-bottom:9px;display:flex;align-items:center;justify-content:space-between}
+  .opt.correct{background:#e3f5e6;border-color:#3d9a55;color:#215021}
+  .opt.wrong{background:#fbe4e5;border-color:var(--rose);color:#7a1f24}
+  .fb{margin-top:6px;font-size:12.5px;padding:10px 14px;border-radius:9px}
+  .fb.good{background:#e3f5e6;color:#215021}
+
+  .scorebar{display:flex;align-items:center;justify-content:space-between;margin-top:8px;background:linear-gradient(120deg,rgba(124,58,237,.08),rgba(56,189,248,.06));border:1px solid rgba(124,58,237,.18);border-radius:14px;padding:16px 20px}
+  .scorebar .lbl{font-size:12px;color:var(--muted2);font-weight:600;text-transform:uppercase;letter-spacing:.2px}
+  .scorebar .val{font-size:22px;font-weight:700;font-family:'Space Grotesk',sans-serif}
+
+  .finish{margin-top:30px;text-align:center;background:var(--ink);color:var(--bg);border-radius:18px;padding:36px 30px}
+  .finish h2{color:#fff;font-size:22px;font-weight:600}
+  .finish p{color:#d8d2e6;font-size:13.5px;margin-top:8px;max-width:52ch;margin-left:auto;margin-right:auto}
+  .badgerow{display:flex;justify-content:center;gap:8px;margin-top:20px;flex-wrap:wrap}
+  .badge{background:var(--gold);color:var(--ink);font-weight:700;font-size:11px;padding:7px 13px;border-radius:999px}
+  .btn-finish{margin-top:22px;background:linear-gradient(120deg,#7c3aed,#5b21b6);color:#fff;padding:15px 26px;font-size:12.5px;box-shadow:0 16px 30px -14px rgba(124,58,237,.6)}
+</style>
+</helmet>
+
+<div class="frame">
+  <div class="topbar">
+    <svg class="ic" viewBox="0 0 24 24" style="stroke:#8b8599"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    <div class="mono" style="font-size:11px;font-weight:600;color:#9a8fb5;white-space:nowrap">NETWORKING · MODULE 01 · TOPIC 1.1</div>
+    <div class="steptrack">
+      <div class="steprow" style="flex:1">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
+          <span class="stepdot" style="background:linear-gradient(140deg,#1d4ed8,#38bdf8)"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px;stroke:#fff"><path d="M5 12l4 4 10-10"/></svg></span>
+          <span class="steplbl" style="color:#1739a8">Story</span>
+        </div>
+        <div class="stepline" style="background:linear-gradient(90deg,#1d4ed8,#38bdf8)"></div>
+      </div>
+      <div class="steprow" style="flex:1">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
+          <span class="stepdot" style="background:linear-gradient(140deg,#1d4ed8,#38bdf8)"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px;stroke:#fff"><path d="M5 12l4 4 10-10"/></svg></span>
+          <span class="steplbl" style="color:#1739a8">Concept</span>
+        </div>
+        <div class="stepline" style="background:linear-gradient(90deg,#1d4ed8,#38bdf8)"></div>
+      </div>
+      <div class="steprow" style="flex:1">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
+          <span class="stepdot" style="background:linear-gradient(140deg,#1d4ed8,#38bdf8)"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px;stroke:#fff"><path d="M5 12l4 4 10-10"/></svg></span>
+          <span class="steplbl" style="color:#1739a8">Simulate</span>
+        </div>
+        <div class="stepline" style="background:linear-gradient(90deg,#1d4ed8,#38bdf8)"></div>
+      </div>
+      <div class="steprow">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
+          <span class="stepdot" style="background:linear-gradient(140deg,#7c3aed,#a78bfa);box-shadow:0 0 0 4px rgba(124,58,237,.18)"><svg class="ic" viewBox="0 0 24 24" style="width:15px;height:15px;stroke:#fff"><path d="M12 2l2.5 5 5.5.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.5-.8Z"/></svg></span>
+          <span class="steplbl" style="color:#5b21b6">Game</span>
+        </div>
+      </div>
+    </div>
+    <span class="xpchip"><svg class="ic" viewBox="0 0 24 24" style="width:13px;height:13px;stroke:#1739a8"><path d="M6 3h12l-1 7-5 3-5-3Z"/></svg>+40 XP</span>
+  </div>
+  <div style="height:3px;background:#eee9f7"><div style="height:100%;background:linear-gradient(90deg,#1d4ed8,#38bdf8);width:82%"></div></div>
+
+  <div class="pad">
+    <span class="toptag"><svg class="ic" viewBox="0 0 24 24" style="width:12px;height:12px;stroke:#5b21b6"><path d="M12 2l2.5 5 5.5.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.5-.8Z"/></svg>Game · Prove it</span>
+    <h1 class="title">Sort the Signal</h1>
+    <p class="lead">First, match the postal idea to its network twin. Then answer Michael's own questions — the same ones he had to work out for himself.</p>
+
+    <div class="card puzzle">
+      <div class="puzzle-head">
+        <div><div class="puzzle-title">Puzzle · Match each pair</div><div class="puzzle-sub">Drag a card on the left to its match on the right</div></div>
+        <span class="xpchip" style="background:rgba(124,58,237,.1);color:#5b21b6">2 / 3 matched</span>
+      </div>
+      <div class="matchgrid">
+        <div class="matchpill left"><span class="num done">✓</span>A letter</div>
+        <div class="matchline"></div>
+        <div class="matchpill right"><span class="num done">✓</span>A data packet</div>
+
+        <div class="matchpill left"><span class="num done">✓</span>Local sorting office</div>
+        <div class="matchline"></div>
+        <div class="matchpill right"><span class="num done">✓</span>Router</div>
+
+        <div class="matchpill left"><span class="num">3</span>Street address</div>
+        <div class="matchline"></div>
+        <div class="matchpill right wrongslot"><span class="num">?</span>Recipient's mailbox</div>
+      </div>
+    </div>
+
+    <div class="quizsec">
+      <div class="card qcard">
+        <p class="qtext">1. Michael's laptop, TV, and printer are all in the same room. Why can't they exchange anything on their own?</p>
+        <div class="opt correct">Being in the same room doesn't create a connection between devices<svg class="ic" viewBox="0 0 24 24" style="width:16px;height:16px;stroke:#215021"><path d="M5 12l4 4 10-10"/></svg></div>
+        <div class="opt">They're too far apart</div>
+        <div class="opt">They use different electricity</div>
+        <div class="fb good">That's right — proximity isn't connection — devices need a shared network to exchange anything.</div>
+      </div>
+
+      <div class="card qcard">
+        <p class="qtext">2. In the postal analogy, what does a device's network address work like?</p>
+        <div class="opt wrong">A postage stamp<svg class="ic" viewBox="0 0 24 24" style="width:16px;height:16px;stroke:#7a1f24"><path d="M6 6l12 12M18 6L6 18"/></svg></div>
+        <div class="opt correct">A street address that lets mail reach the right house<svg class="ic" viewBox="0 0 24 24" style="width:16px;height:16px;stroke:#215021"><path d="M5 12l4 4 10-10"/></svg></div>
+        <div class="opt">The mail truck itself</div>
+        <div class="fb good">An address identifies exactly which device data should be delivered to.</div>
+      </div>
+
+      <div class="scorebar">
+        <div><div class="lbl">Score</div><div class="val">2 / 2 correct</div></div>
+        <div><div class="lbl">XP this topic</div><div class="val" style="color:var(--gold)">40 XP</div></div>
+      </div>
+    </div>
+
+    <div class="finish">
+      <h2 class="disp">Topic 1.1 complete.</h2>
+      <p>Remember the silence in Michael's room? You've now solved it. You know what a network is, why it exists, and how the postal system already taught you the idea.</p>
+      <div class="badgerow">
+        <span class="badge">✓ What is a Network?</span>
+        <span class="badge">✓ The Postal Analogy</span>
+        <span class="badge">✓ Nodes &amp; Addresses</span>
+      </div>
+      <button class="btn btn-finish">Continue to Topic 1.2<svg class="ic" viewBox="0 0 24 24" style="width:13px;height:13px;stroke:#fff"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

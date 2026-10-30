@@ -1,0 +1,98 @@
+/* Chrome around the Networking course map: title panel, HUD, module tabs,
+   loading state and toast. Light panels in the logo's colours: cyan
+   (#1fb5e0) through blue (#4a63b5) to violet (#7a52a8). Scoped under
+   .om.cm-page (beats outline-modern.css). */
+
+.om.cm-page {
+  --logo-cyan: #1fb5e0;
+  --logo-blue: #4a63b5;
+  --logo-violet: #7a52a8;
+  --logo-grad: linear-gradient(120deg, var(--logo-cyan), var(--logo-blue) 55%, var(--logo-violet));
+  --om-cyan: var(--logo-cyan);
+  --om-indigo: var(--logo-blue);
+  --om-violet: var(--logo-violet);
+}
+
+/* ---- title panel: the dark navy band from concept.css (.tc-hero-band) ---- */
+.om.cm-page .cm-board {
+  position: relative; overflow: hidden; padding: 34px 36px 32px; margin-bottom: 14px; color: #e8eeff;
+  background:
+    radial-gradient(ellipse 60% 80% at 85% 20%, rgba(56, 189, 248, .22), transparent 60%),
+    radial-gradient(ellipse 50% 70% at 10% 100%, rgba(99, 102, 241, .25), transparent 60%),
+    linear-gradient(160deg, #0a1330, #10204d 55%, #14296a);
+  border-radius: 20px; box-shadow: 0 30px 60px -30px rgba(10, 19, 48, .7);
+}
+.om.cm-page .cm-board::before { /* faint engineering grid */
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background-image: linear-gradient(rgba(125, 160, 255, .08) 1px, transparent 1px), linear-gradient(90deg, rgba(125, 160, 255, .08) 1px, transparent 1px);
+  background-size: 40px 40px;
+  -webkit-mask: linear-gradient(180deg, #000, transparent 95%); mask: linear-gradient(180deg, #000, transparent 95%);
+}
+.om.cm-page .cm-board > * { position: relative; }
+.om.cm-page .cm-crumbs { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: #8fa3d6; }
+.om.cm-page .cm-crumbs a { color: inherit; }
+.om.cm-page .cm-crumbs a:hover { color: #fff; }
+.om.cm-page .cm-crumbs span { color: #9fd8f7; }
+.om.cm-page .cm-crumbs .ic { stroke: #5f74ad; }
+.om.cm-page .cm-board h1 { font-size: clamp(30px, 4.4vw, 46px); font-weight: 600; line-height: 1.08; letter-spacing: -1.2px; margin-top: 12px; color: #fff; }
+.om.cm-page .cm-board h1 .grad { background: linear-gradient(100deg, #38bdf8, #818cf8); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.om.cm-page .cm-board-sub { max-width: 600px; margin-top: 12px; font-size: 16px; line-height: 1.65; color: #b9c6e8; }
+.om.cm-page .cm-board-meta { list-style: none; padding: 0; margin: 18px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.om.cm-page .cm-board-meta li {
+  display: inline-flex; align-items: center; gap: 7px; padding: 7px 12px; border-radius: 8px;
+  background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .1); font-size: 13px; font-weight: 600; color: #cfdaf7;
+}
+.om.cm-page .cm-board-meta .ic { stroke: #7dd3fc; }
+.om.cm-page .cm-board-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+.om.cm-page .cm-scroll-tag {
+  display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; font-size: 13px; color: #b9c6e8;
+  background: rgba(255, 255, 255, .05); border: 1px solid rgba(255, 255, 255, .1); border-left: 3px solid #38bdf8; border-radius: 10px;
+}
+.om.cm-page .cm-scroll-tag .ic { stroke: none; fill: #38bdf8; }
+.om.cm-page .cm-scroll-tag b { color: #fff; }
+.om.cm-page .cm-confirm { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 12.5px; color: #b9c6e8; }
+.om.cm-page .nm-ghost { color: #e8eeff; background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .18); border-radius: 999px; }
+.om.cm-page .nm-ghost:hover { background: rgba(255, 255, 255, .12); border-color: rgba(125, 211, 252, .55); }
+.om.cm-page .nm-ghost.danger { color: #fda4a8; border-color: rgba(253, 164, 168, .45); }
+@media (max-width: 640px) {
+  .om.cm-page .cm-board { padding: 26px 20px 24px; }
+}
+
+/* ---- HUD: the light panel from outline-modern.css, in logo colours ---- */
+.om.cm-page .wm-hud { padding: 12px 16px; margin-bottom: 12px; border-radius: 18px; }
+.om.cm-page .wm-play { background: var(--logo-grad); box-shadow: 0 14px 28px -14px rgba(74, 99, 181, .8); }
+.om.cm-page .wm-stat:nth-child(1) > .ic { background: #e3f6fc; stroke: var(--logo-cyan) !important; }
+.om.cm-page .wm-stat:nth-child(2) > .ic { background: #e8ecf8; stroke: var(--logo-blue) !important; fill: var(--logo-blue) !important; }
+.om.cm-page .wm-stat:nth-child(3) > .ic { background: #efe9f6; stroke: var(--logo-violet) !important; }
+.om.cm-page .wm-stat:nth-child(4) > .ic { background: #e8ecf8; fill: var(--logo-blue) !important; }
+.om.cm-page .wm-lv { background: var(--logo-grad); }
+
+/* ---- module tabs ---- */
+.om.cm-page .cm-strip { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 12px; scrollbar-width: thin; }
+.om.cm-page .cm-strip button {
+  flex: none; display: flex; align-items: center; gap: 8px; padding: 6px 14px 6px 6px; cursor: pointer;
+  font: inherit; font-size: 12px; font-weight: 600; color: var(--om-ink);
+  background: #fff; border: 1px solid var(--om-border); border-radius: 999px;
+  box-shadow: 0 2px 6px -3px rgba(40, 50, 120, .15);
+  transition: border-color .15s, background .15s;
+}
+.om.cm-page .cm-strip button:hover { border-color: rgba(74, 99, 181, .45); }
+.om.cm-page .cm-strip button[aria-current="true"] { background: #eef1fb; border-color: var(--logo-blue); color: var(--logo-blue); }
+.om.cm-page .cm-strip i {
+  width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-size: 11px; font-weight: 700; color: #fff;
+  background: var(--logo-grad);
+}
+.om.cm-page .cm-strip button[data-state="done"] i { background: linear-gradient(135deg, #10b981, #059669); }
+.om.cm-page .cm-strip button[data-state="locked"] { color: var(--om-faint); }
+.om.cm-page .cm-strip button[data-state="locked"] i { background: #c3c8dc; }
+.om.cm-page .cm-strip .cm-findme i { background: var(--logo-cyan); }
+
+/* ---- loading / sign-in state ---- */
+.om.cm-page .wm-state { color: var(--om-ink); background: #fff; border: 1px solid var(--om-border); border-radius: 20px; box-shadow: var(--om-panel-shadow); }
+.om.cm-page .wm-state .ic { stroke: var(--logo-blue); }
+.om.cm-page .wm-state p { font-size: 13.5px; color: var(--om-muted); max-width: 380px; }
+.om.cm-page .cm-state-title { font-family: var(--font-grotesk), sans-serif; font-size: 19px; font-weight: 700; color: var(--om-ink); }
+.om.cm-page .wm-spinner { border-color: rgba(74, 99, 181, .2); border-top-color: var(--logo-blue); }
+
+/* ---- toast ---- */
+.om.cm-page .qp-toast { color: #fff; background: var(--logo-blue); border: 0; border-radius: 12px; }
